@@ -99,6 +99,8 @@ class WordlyUiMapperTest {
             assertTrue("$width x $height content should fit width", metrics.contentWidth <= width)
             assertTrue("$width x $height board tile should stay visible", metrics.tileSize >= 24f)
             assertTrue("$width x $height keyboard key should stay tappable", metrics.keyHeight >= 34f)
+            assertTrue("$width x $height expanded clue should grow", metrics.expandedCluePanelHeight > metrics.cluePanelHeight)
+            assertTrue("$width x $height expanded clue should fit screen", metrics.expandedCluePanelHeight <= height)
         }
     }
 

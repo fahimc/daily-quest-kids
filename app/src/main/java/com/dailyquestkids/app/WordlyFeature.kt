@@ -2,6 +2,8 @@ package com.dailyquestkids.app
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -34,10 +36,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -150,6 +158,9 @@ internal fun WordlyGameScreen(
                 widthDp = maxWidth.value,
                 heightDp = maxHeight.value,
             )
+        var isClueExpanded by remember(state.clueText, state.openHintText, state.isTerminal) {
+            mutableStateOf(false)
+        }
 
         Column(
             modifier =
@@ -178,6 +189,31 @@ internal fun WordlyGameScreen(
                 metrics = metrics,
                 onUseHint = actions.onUseHint,
                 onReturnHome = actions.onReturnHome,
+                onToggleExpanded = { isClueExpanded = !isClueExpanded },
+            )
+        }
+        if (isClueExpanded && !state.isTerminal) {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .testTag("wordlyClueDismissLayer")
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = { isClueExpanded = false },
+                        ),
+            )
+            WordlyExpandedCluePanel(
+                state = state,
+                metrics = metrics,
+                onUseHint = actions.onUseHint,
+                onCollapse = { isClueExpanded = false },
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .width(metrics.contentWidth.dp)
+                        .padding(bottom = metrics.verticalPadding.dp),
             )
         }
     }
@@ -207,6 +243,13 @@ internal object WordlyLayoutCalculator {
         val keyboardGap = (heightDp * 0.006f).coerceIn(3f, 6f)
         val keyHeight = (heightDp * 0.055f).coerceIn(34f, 50f)
         val cluePanelHeight = (heightDp * 0.14f).coerceIn(88f, 132f)
+        val maxExpandedCluePanelHeight = (heightDp - verticalPadding * 2f).coerceAtLeast(cluePanelHeight)
+        val minExpandedCluePanelHeight = (cluePanelHeight + 44f).coerceAtMost(maxExpandedCluePanelHeight)
+        val expandedCluePanelHeight =
+            (heightDp * 0.32f).coerceIn(
+                minExpandedCluePanelHeight,
+                maxExpandedCluePanelHeight,
+            )
         val keyboardHeight = keyHeight * 3f + keyboardGap * 2f
         val boardHeightBudget =
             heightDp -
@@ -233,6 +276,7 @@ internal object WordlyLayoutCalculator {
             keyHeight = keyHeight,
             keyboardGap = keyboardGap,
             cluePanelHeight = cluePanelHeight,
+            expandedCluePanelHeight = expandedCluePanelHeight,
             textScale = textScale,
         )
     }
@@ -249,6 +293,7 @@ internal data class WordlyLayoutMetrics(
     val keyHeight: Float,
     val keyboardGap: Float,
     val cluePanelHeight: Float,
+    val expandedCluePanelHeight: Float,
     val textScale: Float,
 ) {
     val totalHeight: Float =
@@ -353,9 +398,24 @@ private fun WordlyStatusStrip(
         horizontalArrangement = Arrangement.spacedBy((6f * metrics.textScale).dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        WordlyPill(text = state.streakLabel, metrics = metrics, modifier = Modifier.weight(0.9f))
-        WordlyPill(text = state.prompt, metrics = metrics, modifier = Modifier.weight(1.65f))
-        WordlyPill(text = state.starLabel, metrics = metrics, modifier = Modifier.weight(0.95f))
+        WordlyPill(
+            text = state.streakLabel,
+            metrics = metrics,
+            modifier = Modifier.weight(0.82f),
+            tag = "wordlyStreakPill",
+        )
+        WordlyPill(
+            text = state.prompt,
+            metrics = metrics,
+            modifier = Modifier.weight(2f),
+            tag = "wordlyPromptPill",
+        )
+        WordlyPill(
+            text = state.starLabel,
+            metrics = metrics,
+            modifier = Modifier.weight(0.88f),
+            tag = "wordlyStarsPill",
+        )
     }
 }
 
@@ -364,27 +424,122 @@ private fun WordlyPill(
     text: String,
     metrics: WordlyLayoutMetrics,
     modifier: Modifier,
+    tag: String,
 ) {
     Surface(
-        modifier = modifier.fillMaxHeight(),
+        modifier =
+            modifier
+                .fillMaxHeight()
+                .testTag(tag),
         shape = RoundedCornerShape(18.dp),
         color = Color(0xFFF8FFF0).copy(alpha = 0.94f),
         border = BorderStroke(1.dp, Color(0xFF75B65B)),
     ) {
-        Box(
-            modifier = Modifier.padding(horizontal = (8f * metrics.textScale).dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = text,
-                fontWeight = FontWeight.Bold,
-                fontSize = (13f * metrics.textScale).sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-            )
-        }
+        AutoSizeText(
+            text = text,
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = (7f * metrics.textScale).dp),
+            spec =
+                AutoSizeTextSpec(
+                    maxFontSizeSp = 13f * metrics.textScale,
+                    minFontSizeSp = 7.5f,
+                    maxLines = 1,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    softWrap = false,
+                ),
+        )
     }
+}
+
+@Composable
+private fun AutoSizeText(
+    text: String,
+    modifier: Modifier,
+    spec: AutoSizeTextSpec,
+) {
+    val textMeasurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    BoxWithConstraints(modifier = modifier, contentAlignment = spec.contentAlignment) {
+        val maxWidthPx = with(density) { maxWidth.toPx().toInt().coerceAtLeast(1) }
+        val maxHeightPx = with(density) { maxHeight.toPx().toInt().coerceAtLeast(1) }
+        val constraints =
+            Constraints(
+                maxWidth = maxWidthPx,
+                maxHeight = maxHeightPx,
+            )
+        val fittedFontSize =
+            remember(
+                text,
+                maxWidthPx,
+                maxHeightPx,
+                spec,
+            ) {
+                fittedFontSizeSp(
+                    text = text,
+                    textMeasurer = textMeasurer,
+                    constraints = constraints,
+                    spec = spec,
+                )
+            }
+
+        Text(
+            text = text,
+            modifier = Modifier.fillMaxWidth(),
+            color = spec.color,
+            fontWeight = spec.fontWeight,
+            fontSize = fittedFontSize.sp,
+            lineHeight = (fittedFontSize * 1.16f).sp,
+            maxLines = spec.maxLines,
+            overflow = TextOverflow.Clip,
+            softWrap = spec.softWrap,
+            textAlign = spec.textAlign,
+        )
+    }
+}
+
+private data class AutoSizeTextSpec(
+    val maxFontSizeSp: Float,
+    val minFontSizeSp: Float,
+    val maxLines: Int,
+    val fontWeight: FontWeight,
+    val textAlign: TextAlign,
+    val color: Color = Color.Unspecified,
+    val softWrap: Boolean = true,
+    val contentAlignment: Alignment = Alignment.Center,
+)
+
+private fun fittedFontSizeSp(
+    text: String,
+    textMeasurer: TextMeasurer,
+    constraints: Constraints,
+    spec: AutoSizeTextSpec,
+): Float {
+    var fontSize = spec.maxFontSizeSp
+    while (fontSize > spec.minFontSizeSp) {
+        val result =
+            textMeasurer.measure(
+                text = AnnotatedString(text),
+                style =
+                    TextStyle(
+                        fontSize = fontSize.sp,
+                        fontWeight = spec.fontWeight,
+                        lineHeight = (fontSize * 1.16f).sp,
+                        textAlign = spec.textAlign,
+                    ),
+                overflow = TextOverflow.Clip,
+                softWrap = spec.softWrap,
+                maxLines = spec.maxLines,
+                constraints = constraints,
+            )
+        if (!result.didOverflowWidth && !result.didOverflowHeight) {
+            return fontSize
+        }
+        fontSize -= 0.5f
+    }
+    return spec.minFontSizeSp
 }
 
 @Composable
@@ -546,13 +701,22 @@ private fun WordlyCluePanel(
     metrics: WordlyLayoutMetrics,
     onUseHint: () -> Unit,
     onReturnHome: () -> Unit,
+    onToggleExpanded: () -> Unit,
 ) {
+    val panelModifier =
+        Modifier
+            .fillMaxWidth()
+            .height(metrics.cluePanelHeight.dp)
+            .testTag("wordlyCluePanel")
+            .then(
+                if (state.summary == null) {
+                    Modifier.clickable(onClick = onToggleExpanded)
+                } else {
+                    Modifier
+                },
+            )
     Surface(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .height(metrics.cluePanelHeight.dp)
-                .testTag("wordlyCluePanel"),
+        modifier = panelModifier,
         shape = RoundedCornerShape(24.dp),
         color = Color(0xFFF9FFE8).copy(alpha = 0.96f),
         border = BorderStroke(2.dp, Color(0xFFB7D477)),
@@ -589,7 +753,7 @@ private fun WordlyActiveClueContent(
         Box(
             modifier =
                 Modifier
-                    .size((metrics.cluePanelHeight - 24f).coerceIn(58f, 92f).dp)
+                    .size((metrics.cluePanelHeight - 28f).coerceIn(52f, 86f).dp)
                     .clip(RoundedCornerShape(18.dp))
                     .background(Color(0xFF2EAF32)),
             contentAlignment = Alignment.Center,
@@ -601,11 +765,21 @@ private fun WordlyActiveClueContent(
             verticalArrangement = Arrangement.spacedBy((2f * metrics.textScale).dp),
         ) {
             Text("Clue", fontWeight = FontWeight.Black, fontSize = (17f * metrics.textScale).sp, maxLines = 1)
-            Text(
+            AutoSizeText(
                 text = state.openHintText ?: state.clueText,
-                fontSize = (14f * metrics.textScale).sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height((metrics.cluePanelHeight * 0.48f).dp),
+                spec =
+                    AutoSizeTextSpec(
+                        maxFontSizeSp = 14f * metrics.textScale,
+                        minFontSizeSp = 8.5f,
+                        maxLines = if (metrics.cluePanelHeight > 106f) 3 else 2,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.Start,
+                        contentAlignment = Alignment.TopStart,
+                    ),
             )
             state.message?.let { message ->
                 Text(
@@ -632,6 +806,114 @@ private fun WordlyActiveClueContent(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Use Hint", fontWeight = FontWeight.Bold, fontSize = (12f * metrics.textScale).sp, maxLines = 1)
                 Text("${state.hintsRemaining}", fontWeight = FontWeight.Black, fontSize = (18f * metrics.textScale).sp)
+            }
+        }
+    }
+}
+
+@Composable
+private fun WordlyExpandedCluePanel(
+    state: WordlyUiState,
+    metrics: WordlyLayoutMetrics,
+    onUseHint: () -> Unit,
+    onCollapse: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier =
+            modifier
+                .height(metrics.expandedCluePanelHeight.dp)
+                .testTag("wordlyExpandedCluePanel")
+                .clickable(onClick = onCollapse),
+        shape = RoundedCornerShape(26.dp),
+        color = Color(0xFFF9FFE8).copy(alpha = 0.98f),
+        border = BorderStroke(2.dp, Color(0xFF7BBF58)),
+        shadowElevation = 8.dp,
+    ) {
+        Column(
+            modifier = Modifier.padding((14f * metrics.textScale).dp),
+            verticalArrangement = Arrangement.spacedBy((8f * metrics.textScale).dp),
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy((10f * metrics.textScale).dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier =
+                        Modifier
+                            .size((60f * metrics.textScale).coerceIn(48f, 64f).dp)
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(Color(0xFF2EAF32)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("W", color = Color.White, fontWeight = FontWeight.Black, fontSize = (28f * metrics.textScale).sp)
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Clue", fontWeight = FontWeight.Black, fontSize = (20f * metrics.textScale).sp, maxLines = 1)
+                }
+                Button(
+                    onClick = onUseHint,
+                    enabled = state.canUseHint,
+                    modifier =
+                        Modifier
+                            .width((112f * metrics.textScale).coerceAtLeast(88f).dp)
+                            .height((52f * metrics.textScale).coerceAtLeast(44f).dp),
+                    shape = RoundedCornerShape(18.dp),
+                    contentPadding = PaddingValues(horizontal = 6.dp),
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Use Hint", fontWeight = FontWeight.Bold, fontSize = (12f * metrics.textScale).sp, maxLines = 1)
+                        Text("${state.hintsRemaining}", fontWeight = FontWeight.Black, fontSize = (18f * metrics.textScale).sp)
+                    }
+                }
+            }
+            AutoSizeText(
+                text = state.clueText,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                spec =
+                    AutoSizeTextSpec(
+                        maxFontSizeSp = 18f * metrics.textScale,
+                        minFontSizeSp = 10f,
+                        maxLines = 6,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.Start,
+                        contentAlignment = Alignment.TopStart,
+                    ),
+            )
+            state.openHintText?.let { hint ->
+                Surface(shape = RoundedCornerShape(16.dp), color = Color(0xFFFFF2C0)) {
+                    AutoSizeText(
+                        text = hint,
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height((42f * metrics.textScale).coerceAtLeast(34f).dp)
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                        spec =
+                            AutoSizeTextSpec(
+                                maxFontSizeSp = 13f * metrics.textScale,
+                                minFontSizeSp = 9f,
+                                maxLines = 2,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.Start,
+                                contentAlignment = Alignment.TopStart,
+                            ),
+                    )
+                }
+            }
+            state.message?.let { message ->
+                Text(
+                    text = message,
+                    modifier = Modifier.testTag("wordlyExpandedMessage"),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = (12f * metrics.textScale).sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.primary,
+                )
             }
         }
     }

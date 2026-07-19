@@ -1,9 +1,12 @@
 package com.dailyquestkids.app
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import com.dailyquestkids.core.common.SeasonCalendar
 import com.dailyquestkids.core.data.SamplePackRepository
 import com.dailyquestkids.core.design.DailyQuestTheme
@@ -52,6 +55,43 @@ class WordlyVisualStateInstrumentedTest {
     @Test
     fun hintStateRenders() {
         assertWordlyStateRenders(WordlyGameEngine.revealHint(puzzle, WordlyGameEngine.initial(puzzle)).state)
+    }
+
+    @Test
+    fun cluePanelExpandsAndCollapses() {
+        compose.setContent {
+            DailyQuestTheme {
+                WordlyGameScreen(
+                    state =
+                        WordlyUiMapper.map(
+                            puzzle = puzzle,
+                            gameState = WordlyGameEngine.initial(puzzle),
+                            settings = QuestSettings(),
+                            homeState = homeState,
+                            transientMessage = null,
+                        ),
+                    actions =
+                        WordlyGameActions(
+                            onBack = {},
+                            onUseHint = {},
+                            onLetter = {},
+                            onDelete = {},
+                            onSubmit = {},
+                            onReturnHome = {},
+                        ),
+                )
+            }
+        }
+
+        compose.onAllNodesWithTag("wordlyExpandedCluePanel").assertCountEquals(0)
+        compose.onNodeWithTag("wordlyCluePanel").performClick()
+        compose.onNodeWithTag("wordlyExpandedCluePanel").assertIsDisplayed()
+        compose.onNodeWithTag("wordlyExpandedCluePanel").performClick()
+        compose.onAllNodesWithTag("wordlyExpandedCluePanel").assertCountEquals(0)
+
+        compose.onNodeWithTag("wordlyCluePanel").performClick()
+        compose.onNodeWithTag("wordlyClueDismissLayer").performClick()
+        compose.onAllNodesWithTag("wordlyExpandedCluePanel").assertCountEquals(0)
     }
 
     @Test
