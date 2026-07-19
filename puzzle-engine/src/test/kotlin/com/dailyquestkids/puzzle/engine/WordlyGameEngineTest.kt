@@ -24,6 +24,14 @@ class WordlyGameEngineTest {
     }
 
     @Test
+    fun commonValidGuessesAreAcceptedAndRecorded() {
+        val result = WordlyGameEngine.submit(puzzle, type("known"))
+
+        assertEquals(WordlyMessage.GUESS_ACCEPTED, result.message)
+        assertEquals(listOf("known"), result.state.attempts)
+    }
+
+    @Test
     fun attemptExhaustionFailsAndLocksFurtherInput() {
         var state = WordlyGameEngine.initial(puzzle)
         wrongGuesses(6).forEach { guess ->

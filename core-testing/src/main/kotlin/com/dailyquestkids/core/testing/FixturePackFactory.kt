@@ -486,6 +486,7 @@ object FixturePackFactory {
                     "proud",
                     "sweet",
                     "learn",
+                    "known",
                     "magic",
                     "field",
                     "crown",
