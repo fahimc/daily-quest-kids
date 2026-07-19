@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -15,6 +16,7 @@ import com.dailyquestkids.core.data.SamplePackRepository
 import com.dailyquestkids.core.design.DailyQuestTheme
 import com.dailyquestkids.core.model.WordlyPuzzle
 import com.dailyquestkids.puzzle.engine.WordlyGameEngine
+import com.dailyquestkids.puzzle.engine.WordlyMessage
 import com.dailyquestkids.puzzle.engine.WordlySaveState
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -70,6 +72,16 @@ class WordlyVisualStateInstrumentedTest {
     }
 
     @Test
+    fun invalidGuessFeedbackAppearsInTopPromptPill() {
+        val result = WordlyGameEngine.submit(puzzle, type("zzzzz", WordlyGameEngine.initial(puzzle)))
+
+        setWordlyContent(result.state, result.message?.userText)
+
+        compose.onNodeWithTag("wordlyPromptPill").assertTextContains(WordlyMessage.INVALID_GUESS.userText)
+        assertNoTextInkTouchesEdges("wordlyPromptPill", includeVerticalEdges = false)
+    }
+
+    @Test
     fun cluePanelExpandsAndCollapses() {
         setWordlyContent(WordlyGameEngine.initial(puzzle))
 
@@ -111,7 +123,10 @@ class WordlyVisualStateInstrumentedTest {
         assertTrue(image.height > 0)
     }
 
-    private fun setWordlyContent(state: WordlySaveState) {
+    private fun setWordlyContent(
+        state: WordlySaveState,
+        transientMessage: String? = null,
+    ) {
         compose.setContent {
             DailyQuestTheme {
                 WordlyGameScreen(
@@ -121,7 +136,7 @@ class WordlyVisualStateInstrumentedTest {
                             gameState = state,
                             settings = QuestSettings(),
                             homeState = homeState,
-                            transientMessage = null,
+                            transientMessage = transientMessage,
                         ),
                     actions =
                         WordlyGameActions(

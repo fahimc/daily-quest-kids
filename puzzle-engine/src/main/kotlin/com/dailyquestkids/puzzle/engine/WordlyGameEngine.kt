@@ -329,7 +329,7 @@ enum class WordlyMessage(
 ) {
     LETTERS_ONLY("Use letters A to Z."),
     TOO_SHORT("Type five letters before checking."),
-    INVALID_GUESS("That is not in today's word list."),
+    INVALID_GUESS("Not a word."),
     ALREADY_FINISHED("This Wordly is finished."),
     GUESS_ACCEPTED("Good thinking. Try the clues from the colours."),
     SOLVED("You found the hidden word."),

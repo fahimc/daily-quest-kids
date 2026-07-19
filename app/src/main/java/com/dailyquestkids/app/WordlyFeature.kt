@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
@@ -448,6 +449,7 @@ private fun WordlyStatusStrip(
     state: WordlyUiState,
     metrics: WordlyLayoutMetrics,
 ) {
+    val hasFeedback = state.message != null
     Row(
         modifier =
             Modifier
@@ -459,22 +461,29 @@ private fun WordlyStatusStrip(
         WordlyPill(
             text = state.streakLabel,
             metrics = metrics,
-            modifier = Modifier.weight(0.72f),
-            tag = "wordlyStreakPill",
+            modifier = Modifier.weight(0.72f).testTag("wordlyStreakPill"),
             maxFontSizeSp = 10f * metrics.textScale,
         )
         WordlyPill(
-            text = state.prompt,
+            text = state.statusPrompt,
             metrics = metrics,
-            modifier = Modifier.weight(2.4f),
-            tag = "wordlyPromptPill",
-            maxFontSizeSp = 9.6f * metrics.textScale,
+            modifier = Modifier.weight(2.4f).testTag("wordlyPromptPill"),
+            maxFontSizeSp = if (hasFeedback) 9f * metrics.textScale else 9.6f * metrics.textScale,
+            style =
+                if (hasFeedback) {
+                    WordlyPillStyle(
+                        backgroundColor = Color(0xFFFFF7D6),
+                        borderColor = Color(0xFFD9A914),
+                        textColor = Color(0xFF2E2A14),
+                    )
+                } else {
+                    WordlyPillStyle()
+                },
         )
         WordlyPill(
             text = state.starLabel,
             metrics = metrics,
-            modifier = Modifier.weight(0.76f),
-            tag = "wordlyStarsPill",
+            modifier = Modifier.weight(0.76f).testTag("wordlyStarsPill"),
             maxFontSizeSp = 10f * metrics.textScale,
         )
     }
@@ -485,17 +494,17 @@ private fun WordlyPill(
     text: String,
     metrics: WordlyLayoutMetrics,
     modifier: Modifier,
-    tag: String,
     maxFontSizeSp: Float,
+    style: WordlyPillStyle = WordlyPillStyle(),
 ) {
     Surface(
         modifier =
             modifier
                 .fillMaxHeight()
-                .testTag(tag),
+                .semantics(mergeDescendants = true) {},
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xFFF8FFF0).copy(alpha = 0.94f),
-        border = BorderStroke(1.dp, Color(0xFF75B65B)),
+        color = style.backgroundColor,
+        border = BorderStroke(1.dp, style.borderColor),
     ) {
         AutoSizeText(
             text = text,
@@ -510,11 +519,18 @@ private fun WordlyPill(
                     maxLines = 1,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
+                    color = style.textColor,
                     softWrap = false,
                 ),
         )
     }
 }
+
+private data class WordlyPillStyle(
+    val backgroundColor: Color = Color(0xFFF8FFF0).copy(alpha = 0.94f),
+    val borderColor: Color = Color(0xFF75B65B),
+    val textColor: Color = Color.Unspecified,
+)
 
 @Composable
 private fun AutoSizeText(
@@ -1054,18 +1070,22 @@ internal object WordlyUiMapper {
                 ?.visibleResultPattern
         val openHints = puzzle.hints.filter { it.order in gameState.revealedHintOrders }.sortedBy { it.order }
 
+        val prompt = "Find the hidden 5-letter word."
+        val message = transientMessage ?: terminalMessage(gameState)
+
         return WordlyUiState(
             attemptsLabel = "${gameState.attempts.size}/${WordlyGameEngine.MAX_ATTEMPTS}",
             streakLabel = "Streak: ${wordlyStreak(homeState)}",
             starLabel = "Stars ${starScore(gameState)}/20",
-            prompt = "Find the hidden 5-letter word.",
+            prompt = prompt,
+            statusPrompt = message ?: prompt,
             rows = WordlyGameEngine.boardRows(puzzle, gameState),
             keyboardRows = keyboardRows(WordlyGameEngine.keyboardStates(puzzle, gameState)),
             clueText = puzzle.definition,
             openHintText = openHints.lastOrNull()?.text,
             hintsRemaining = puzzle.hints.size - openHints.size,
             canUseHint = !gameState.isTerminal && openHints.size < puzzle.hints.size,
-            message = transientMessage ?: terminalMessage(gameState),
+            message = message,
             summary = if (gameState.isTerminal) WordlyGameEngine.learningSummary(puzzle, gameState) else null,
             sharePattern = safeSharePattern,
             isTerminal = gameState.isTerminal,
@@ -1124,6 +1144,7 @@ internal data class WordlyUiState(
     val streakLabel: String,
     val starLabel: String,
     val prompt: String,
+    val statusPrompt: String,
     val rows: List<WordlyBoardRow>,
     val keyboardRows: List<List<WordlyKeyUiState>>,
     val clueText: String,

@@ -5,6 +5,7 @@ import com.dailyquestkids.core.data.SamplePackRepository
 import com.dailyquestkids.core.model.WordlyPuzzle
 import com.dailyquestkids.puzzle.engine.TileState
 import com.dailyquestkids.puzzle.engine.WordlyGameEngine
+import com.dailyquestkids.puzzle.engine.WordlyMessage
 import com.dailyquestkids.puzzle.engine.WordlySaveState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -75,6 +76,26 @@ class WordlyUiMapperTest {
         state.attempts.forEach { guess ->
             assertFalse(ui.sharePattern.orEmpty().contains(guess, ignoreCase = true))
         }
+    }
+
+    @Test
+    fun invalidGuessMessageBecomesTopStatusFeedback() {
+        val result = WordlyGameEngine.submit(puzzle, type("zzzzz", WordlyGameEngine.initial(puzzle)))
+
+        val ui =
+            WordlyUiMapper.map(
+                puzzle = puzzle,
+                gameState = result.state,
+                settings = QuestSettings(),
+                homeState = homeState,
+                transientMessage = result.message?.userText,
+            )
+
+        assertEquals(WordlyMessage.INVALID_GUESS, result.message)
+        assertEquals("Not a word.", ui.message)
+        assertEquals("Not a word.", ui.statusPrompt)
+        assertEquals("Find the hidden 5-letter word.", ui.prompt)
+        assertEquals(emptyList<String>(), result.state.attempts)
     }
 
     @Test
