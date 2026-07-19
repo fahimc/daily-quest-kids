@@ -77,6 +77,31 @@ class WordlyUiMapperTest {
         }
     }
 
+    @Test
+    fun layoutMetricsFitCommonPhoneViewports() {
+        val viewports =
+            listOf(
+                320f to 480f,
+                320f to 568f,
+                360f to 640f,
+                393f to 851f,
+                412f to 915f,
+                480f to 853f,
+            )
+
+        viewports.forEach { (width, height) ->
+            val metrics = WordlyLayoutCalculator.calculate(widthDp = width, heightDp = height)
+
+            assertTrue(
+                "$width x $height should not scroll; total height was ${metrics.totalHeight}",
+                metrics.totalHeight <= height + 0.01f,
+            )
+            assertTrue("$width x $height content should fit width", metrics.contentWidth <= width)
+            assertTrue("$width x $height board tile should stay visible", metrics.tileSize >= 24f)
+            assertTrue("$width x $height keyboard key should stay tappable", metrics.keyHeight >= 34f)
+        }
+    }
+
     private fun type(
         text: String,
         state: WordlySaveState,

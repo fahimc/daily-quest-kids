@@ -6,25 +6,20 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -42,7 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -137,7 +132,6 @@ private suspend fun handleCompletion(
     dependencies.wordlyProgressStore.save(WordlyGameEngine.acknowledgeCompletion(resultState))
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun WordlyGameScreen(
     state: WordlyUiState,
@@ -151,57 +145,40 @@ internal fun WordlyGameScreen(
                 .testTag("wordlyScreen"),
         contentAlignment = Alignment.TopCenter,
     ) {
-        val horizontalPadding = if (maxWidth < 360.dp) 10.dp else 16.dp
-        val boardWidth = (maxWidth - horizontalPadding * 2).coerceAtMost(390.dp)
-        val tileGap = if (maxWidth < 360.dp) 4.dp else 6.dp
-        val tileSize = ((boardWidth - tileGap * 4) / 5).coerceIn(42.dp, 70.dp)
-        val keyHeight = if (maxWidth < 360.dp) 40.dp else 48.dp
+        val metrics =
+            WordlyLayoutCalculator.calculate(
+                widthDp = maxWidth.value,
+                heightDp = maxHeight.value,
+            )
 
-        LazyColumn(
+        Column(
             modifier =
                 Modifier
-                    .widthIn(max = 720.dp)
-                    .fillMaxWidth()
-                    .padding(horizontal = horizontalPadding),
-            contentPadding = PaddingValues(top = 12.dp, bottom = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+                    .width(metrics.contentWidth.dp)
+                    .fillMaxHeight()
+                    .padding(vertical = metrics.verticalPadding.dp),
+            verticalArrangement = Arrangement.spacedBy(metrics.sectionGap.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            item { WordlyTopBar(state = state, onBack = actions.onBack) }
-            item {
-                FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    AssistChip(onClick = {}, label = { Text(state.streakLabel) })
-                    AssistChip(onClick = {}, label = { Text(state.prompt) })
-                    AssistChip(onClick = {}, label = { Text(state.starLabel) })
-                }
-            }
-            item {
-                WordlyBoard(
-                    rows = state.rows,
-                    tileSize = tileSize,
-                    gap = tileGap,
-                    largeText = state.largeText,
-                )
-            }
-            item {
-                WordlyKeyboard(
-                    rows = state.keyboardRows,
-                    keyHeight = keyHeight,
-                    actions = actions,
-                    enabled = !state.isTerminal,
-                )
-            }
-            item {
-                WordlyCluePanel(
-                    state = state,
-                    onUseHint = actions.onUseHint,
-                    onReturnHome = actions.onReturnHome,
-                )
-            }
+            WordlyTopBar(state = state, metrics = metrics, onBack = actions.onBack)
+            WordlyStatusStrip(state = state, metrics = metrics)
+            WordlyBoard(
+                rows = state.rows,
+                metrics = metrics,
+                largeText = state.largeText,
+            )
+            WordlyKeyboard(
+                rows = state.keyboardRows,
+                metrics = metrics,
+                actions = actions,
+                enabled = !state.isTerminal,
+            )
+            WordlyCluePanel(
+                state = state,
+                metrics = metrics,
+                onUseHint = actions.onUseHint,
+                onReturnHome = actions.onReturnHome,
+            )
         }
     }
 }
@@ -215,50 +192,135 @@ private fun wordlyBackgroundBrush(): Brush =
         ),
     )
 
+internal object WordlyLayoutCalculator {
+    fun calculate(
+        widthDp: Float,
+        heightDp: Float,
+    ): WordlyLayoutMetrics {
+        val horizontalPadding = if (widthDp < 360f) 8f else 12f
+        val contentWidth = (widthDp - horizontalPadding * 2f).coerceAtMost(720f)
+        val verticalPadding = (heightDp * 0.01f).coerceIn(6f, 12f)
+        val sectionGap = (heightDp * 0.007f).coerceIn(4f, 8f)
+        val topBarHeight = (heightDp * 0.075f).coerceIn(50f, 74f)
+        val statusHeight = (heightDp * 0.045f).coerceIn(30f, 42f)
+        val boardGap = if (widthDp < 360f) 3f else 5f
+        val keyboardGap = (heightDp * 0.006f).coerceIn(3f, 6f)
+        val keyHeight = (heightDp * 0.055f).coerceIn(34f, 50f)
+        val cluePanelHeight = (heightDp * 0.14f).coerceIn(88f, 132f)
+        val keyboardHeight = keyHeight * 3f + keyboardGap * 2f
+        val boardHeightBudget =
+            heightDp -
+                verticalPadding * 2f -
+                topBarHeight -
+                statusHeight -
+                keyboardHeight -
+                cluePanelHeight -
+                sectionGap * 4f
+        val tileByHeight = (boardHeightBudget - boardGap * 5f) / 6f
+        val tileByWidth = (contentWidth - boardGap * 4f) / 5f
+        val minimumTileSize = if (heightDp < 520f) 24f else 28f
+        val tileSize = minOf(tileByHeight, tileByWidth, 96f).coerceAtLeast(minimumTileSize)
+        val textScale = (tileSize / 56f).coerceIn(0.56f, 1f)
+
+        return WordlyLayoutMetrics(
+            contentWidth = contentWidth,
+            verticalPadding = verticalPadding,
+            sectionGap = sectionGap,
+            topBarHeight = topBarHeight,
+            statusHeight = statusHeight,
+            tileSize = tileSize,
+            boardGap = boardGap,
+            keyHeight = keyHeight,
+            keyboardGap = keyboardGap,
+            cluePanelHeight = cluePanelHeight,
+            textScale = textScale,
+        )
+    }
+}
+
+internal data class WordlyLayoutMetrics(
+    val contentWidth: Float,
+    val verticalPadding: Float,
+    val sectionGap: Float,
+    val topBarHeight: Float,
+    val statusHeight: Float,
+    val tileSize: Float,
+    val boardGap: Float,
+    val keyHeight: Float,
+    val keyboardGap: Float,
+    val cluePanelHeight: Float,
+    val textScale: Float,
+) {
+    val totalHeight: Float =
+        verticalPadding * 2f +
+            topBarHeight +
+            statusHeight +
+            tileSize * 6f +
+            boardGap * 5f +
+            keyHeight * 3f +
+            keyboardGap * 2f +
+            cluePanelHeight +
+            sectionGap * 4f
+}
+
 @Composable
 private fun WordlyTopBar(
     state: WordlyUiState,
+    metrics: WordlyLayoutMetrics,
     onBack: () -> Unit,
 ) {
+    val iconSize = (metrics.topBarHeight - 8f).coerceAtLeast(42f).dp
+    val logoSize = (metrics.topBarHeight - 16f).coerceAtLeast(34f).dp
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(metrics.topBarHeight.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy((8f * metrics.textScale).dp),
     ) {
         TextButton(
             onClick = onBack,
             modifier =
                 Modifier
-                    .size(52.dp)
+                    .size(iconSize)
                     .clip(CircleShape)
                     .background(Color.White.copy(alpha = 0.92f)),
         ) {
-            Text("<", fontWeight = FontWeight.Black, fontSize = 24.sp)
+            Text("<", fontWeight = FontWeight.Black, fontSize = (22f * metrics.textScale).sp)
         }
         Surface(
-            modifier = Modifier.weight(1f),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .height(metrics.topBarHeight.dp),
             shape = RoundedCornerShape(18.dp),
             color = Color(0xFFF4FFE7).copy(alpha = 0.96f),
             border = BorderStroke(2.dp, Color(0xFF67A95B)),
         ) {
             Row(
-                modifier = Modifier.padding(10.dp),
+                modifier = Modifier.padding((8f * metrics.textScale).dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy((10f * metrics.textScale).dp),
             ) {
                 Box(
                     modifier =
                         Modifier
-                            .size(54.dp)
+                            .size(logoSize)
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color(0xFF41B939)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("W", color = Color.White, fontWeight = FontWeight.Black, fontSize = 28.sp)
+                    Text("W", color = Color.White, fontWeight = FontWeight.Black, fontSize = (26f * metrics.textScale).sp)
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text("Wordly", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
-                    Text("Letter Garden", style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        text = "Wordly",
+                        fontWeight = FontWeight.Black,
+                        fontSize = (28f * metrics.textScale).sp,
+                        maxLines = 1,
+                    )
+                    Text("Letter Garden", fontSize = (11f * metrics.textScale).sp, maxLines = 1)
                 }
                 Surface(
                     shape = RoundedCornerShape(16.dp),
@@ -266,11 +328,11 @@ private fun WordlyTopBar(
                     border = BorderStroke(1.dp, Color(0xFFB4CE9F)),
                 ) {
                     Column(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = (10f * metrics.textScale).dp, vertical = (4f * metrics.textScale).dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
-                        Text("Attempts", style = MaterialTheme.typography.labelSmall)
-                        Text(state.attemptsLabel, fontWeight = FontWeight.Black, fontSize = 20.sp)
+                        Text("Attempts", fontSize = (10f * metrics.textScale).sp, maxLines = 1)
+                        Text(state.attemptsLabel, fontWeight = FontWeight.Black, fontSize = (18f * metrics.textScale).sp)
                     }
                 }
             }
@@ -279,24 +341,70 @@ private fun WordlyTopBar(
 }
 
 @Composable
+private fun WordlyStatusStrip(
+    state: WordlyUiState,
+    metrics: WordlyLayoutMetrics,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(metrics.statusHeight.dp),
+        horizontalArrangement = Arrangement.spacedBy((6f * metrics.textScale).dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        WordlyPill(text = state.streakLabel, metrics = metrics, modifier = Modifier.weight(0.9f))
+        WordlyPill(text = state.prompt, metrics = metrics, modifier = Modifier.weight(1.65f))
+        WordlyPill(text = state.starLabel, metrics = metrics, modifier = Modifier.weight(0.95f))
+    }
+}
+
+@Composable
+private fun WordlyPill(
+    text: String,
+    metrics: WordlyLayoutMetrics,
+    modifier: Modifier,
+) {
+    Surface(
+        modifier = modifier.fillMaxHeight(),
+        shape = RoundedCornerShape(18.dp),
+        color = Color(0xFFF8FFF0).copy(alpha = 0.94f),
+        border = BorderStroke(1.dp, Color(0xFF75B65B)),
+    ) {
+        Box(
+            modifier = Modifier.padding(horizontal = (8f * metrics.textScale).dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = text,
+                fontWeight = FontWeight.Bold,
+                fontSize = (13f * metrics.textScale).sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+            )
+        }
+    }
+}
+
+@Composable
 private fun WordlyBoard(
     rows: List<WordlyBoardRow>,
-    tileSize: Dp,
-    gap: Dp,
+    metrics: WordlyLayoutMetrics,
     largeText: Boolean,
 ) {
     Column(
         modifier = Modifier.testTag("wordlyBoard"),
-        verticalArrangement = Arrangement.spacedBy(gap),
+        verticalArrangement = Arrangement.spacedBy(metrics.boardGap.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         rows.forEachIndexed { rowIndex, row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(metrics.boardGap.dp)) {
                 row.letters.forEachIndexed { columnIndex, letter ->
                     WordlyTile(
                         letter = letter,
                         state = row.states[columnIndex],
-                        size = tileSize,
+                        metrics = metrics,
                         largeText = largeText,
                         tag = "wordlyTile-$rowIndex-$columnIndex",
                     )
@@ -310,7 +418,7 @@ private fun WordlyBoard(
 private fun WordlyTile(
     letter: Char,
     state: TileState,
-    size: Dp,
+    metrics: WordlyLayoutMetrics,
     largeText: Boolean,
     tag: String,
 ) {
@@ -318,7 +426,7 @@ private fun WordlyTile(
     Surface(
         modifier =
             Modifier
-                .size(size)
+                .size(metrics.tileSize.dp)
                 .testTag(tag),
         shape = RoundedCornerShape(10.dp),
         color = colors.container,
@@ -331,7 +439,7 @@ private fun WordlyTile(
                 text = if (letter.isWhitespace()) "" else letter.toString(),
                 color = colors.content,
                 fontWeight = FontWeight.Black,
-                fontSize = if (largeText) 32.sp else 28.sp,
+                fontSize = ((if (largeText) 32f else 28f) * metrics.textScale).sp,
                 textAlign = TextAlign.Center,
             )
         }
@@ -341,7 +449,7 @@ private fun WordlyTile(
 @Composable
 private fun WordlyKeyboard(
     rows: List<List<WordlyKeyUiState>>,
-    keyHeight: Dp,
+    metrics: WordlyLayoutMetrics,
     actions: WordlyGameActions,
     enabled: Boolean,
 ) {
@@ -350,27 +458,27 @@ private fun WordlyKeyboard(
             Modifier
                 .fillMaxWidth()
                 .testTag("wordlyKeyboard"),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(metrics.keyboardGap.dp),
     ) {
         rows.forEachIndexed { rowIndex, row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                horizontalArrangement = Arrangement.spacedBy((3f * metrics.textScale).dp),
             ) {
                 if (rowIndex == rows.lastIndex) {
-                    KeyboardAction("Check", keyHeight, actions.onSubmit, enabled, Modifier.weight(1.35f))
+                    KeyboardAction("Check", metrics, actions.onSubmit, enabled, Modifier.weight(1.3f))
                 }
                 row.forEach { key ->
                     LetterKey(
                         key = key,
-                        height = keyHeight,
+                        metrics = metrics,
                         onLetter = actions.onLetter,
                         enabled = enabled,
                         modifier = Modifier.weight(1f),
                     )
                 }
                 if (rowIndex == rows.lastIndex) {
-                    KeyboardAction("Delete", keyHeight, actions.onDelete, enabled, Modifier.weight(1.35f))
+                    KeyboardAction("Delete", metrics, actions.onDelete, enabled, Modifier.weight(1.3f))
                 }
             }
         }
@@ -380,7 +488,7 @@ private fun WordlyKeyboard(
 @Composable
 private fun LetterKey(
     key: WordlyKeyUiState,
-    height: Dp,
+    metrics: WordlyLayoutMetrics,
     onLetter: (Char) -> Unit,
     enabled: Boolean,
     modifier: Modifier,
@@ -391,8 +499,7 @@ private fun LetterKey(
         enabled = enabled,
         modifier =
             modifier
-                .height(height)
-                .aspectRatio(0.82f),
+                .height(metrics.keyHeight.dp),
         shape = RoundedCornerShape(9.dp),
         colors =
             ButtonDefaults.buttonColors(
@@ -403,14 +510,14 @@ private fun LetterKey(
             ),
         contentPadding = PaddingValues(0.dp),
     ) {
-        Text(key.letter.toString(), fontWeight = FontWeight.Black, fontSize = 18.sp)
+        Text(key.letter.toString(), fontWeight = FontWeight.Black, fontSize = (18f * metrics.textScale).sp)
     }
 }
 
 @Composable
 private fun KeyboardAction(
     label: String,
-    height: Dp,
+    metrics: WordlyLayoutMetrics,
     onClick: () -> Unit,
     enabled: Boolean,
     modifier: Modifier,
@@ -418,17 +525,25 @@ private fun KeyboardAction(
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.height(height),
+        modifier = modifier.height(metrics.keyHeight.dp),
         shape = RoundedCornerShape(10.dp),
         contentPadding = PaddingValues(horizontal = 4.dp),
     ) {
-        Text(label, fontWeight = FontWeight.Bold, fontSize = 12.sp, textAlign = TextAlign.Center)
+        Text(
+            text = label,
+            fontWeight = FontWeight.Bold,
+            fontSize = (11f * metrics.textScale).sp,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
 @Composable
 private fun WordlyCluePanel(
     state: WordlyUiState,
+    metrics: WordlyLayoutMetrics,
     onUseHint: () -> Unit,
     onReturnHome: () -> Unit,
 ) {
@@ -436,52 +551,87 @@ private fun WordlyCluePanel(
         modifier =
             Modifier
                 .fillMaxWidth()
+                .height(metrics.cluePanelHeight.dp)
                 .testTag("wordlyCluePanel"),
         shape = RoundedCornerShape(24.dp),
         color = Color(0xFFF9FFE8).copy(alpha = 0.96f),
         border = BorderStroke(2.dp, Color(0xFFB7D477)),
         shadowElevation = 4.dp,
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+        if (state.summary != null) {
+            WordlySummaryPanel(
+                summary = state.summary,
+                sharePattern = state.sharePattern,
+                metrics = metrics,
+                onReturnHome = onReturnHome,
+            )
+        } else {
+            WordlyActiveClueContent(
+                state = state,
+                metrics = metrics,
+                onUseHint = onUseHint,
+            )
+        }
+    }
+}
+
+@Composable
+private fun WordlyActiveClueContent(
+    state: WordlyUiState,
+    metrics: WordlyLayoutMetrics,
+    onUseHint: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.padding((12f * metrics.textScale).dp),
+        horizontalArrangement = Arrangement.spacedBy((10f * metrics.textScale).dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .size((metrics.cluePanelHeight - 24f).coerceIn(58f, 92f).dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(Color(0xFF2EAF32)),
+            contentAlignment = Alignment.Center,
         ) {
-            Text("Clue", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-            Text(state.clueText, style = MaterialTheme.typography.bodyLarge)
-            state.openHintText?.let { hint ->
-                Surface(shape = RoundedCornerShape(12.dp), color = Color(0xFFFFF2C0)) {
-                    Text(hint, modifier = Modifier.padding(12.dp), fontWeight = FontWeight.SemiBold)
-                }
-            }
+            Text("W", color = Color.White, fontWeight = FontWeight.Black, fontSize = (26f * metrics.textScale).sp)
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy((2f * metrics.textScale).dp),
+        ) {
+            Text("Clue", fontWeight = FontWeight.Black, fontSize = (17f * metrics.textScale).sp, maxLines = 1)
+            Text(
+                text = state.openHintText ?: state.clueText,
+                fontSize = (14f * metrics.textScale).sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
             state.message?.let { message ->
                 Text(
                     text = message,
                     modifier = Modifier.testTag("wordlyMessage"),
                     fontWeight = FontWeight.Bold,
+                    fontSize = (12f * metrics.textScale).sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
-            if (state.summary != null) {
-                WordlySummaryPanel(summary = state.summary, sharePattern = state.sharePattern)
-                Button(onClick = onReturnHome, modifier = Modifier.fillMaxWidth()) {
-                    Text("Return to Daily Five")
-                }
-            } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedButton(
-                        onClick = onUseHint,
-                        enabled = state.canUseHint,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text("Use Hint ${state.hintsRemaining}")
-                    }
-                    Button(
-                        onClick = onReturnHome,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text("Save and Exit")
-                    }
-                }
+        }
+        Button(
+            onClick = onUseHint,
+            enabled = state.canUseHint,
+            modifier =
+                Modifier
+                    .width((104f * metrics.textScale).coerceAtLeast(82f).dp)
+                    .height((metrics.cluePanelHeight - 30f).coerceIn(46f, 76f).dp),
+            shape = RoundedCornerShape(20.dp),
+            contentPadding = PaddingValues(horizontal = 4.dp),
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Use Hint", fontWeight = FontWeight.Bold, fontSize = (12f * metrics.textScale).sp, maxLines = 1)
+                Text("${state.hintsRemaining}", fontWeight = FontWeight.Black, fontSize = (18f * metrics.textScale).sp)
             }
         }
     }
@@ -491,24 +641,44 @@ private fun WordlyCluePanel(
 private fun WordlySummaryPanel(
     summary: WordlyLearningSummary,
     sharePattern: String?,
+    metrics: WordlyLayoutMetrics,
+    onReturnHome: () -> Unit,
 ) {
-    Surface(shape = RoundedCornerShape(18.dp), color = Color.White) {
+    Row(
+        modifier = Modifier.padding((12f * metrics.textScale).dp),
+        horizontalArrangement = Arrangement.spacedBy((8f * metrics.textScale).dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy((2f * metrics.textScale).dp),
         ) {
-            Text(summary.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-            Text(summary.body)
-            summary.example?.let { Text(it, fontWeight = FontWeight.SemiBold) }
-            summary.morphology?.let { Text(it) }
+            Text(summary.title, fontSize = (16f * metrics.textScale).sp, fontWeight = FontWeight.Black, maxLines = 1)
+            Text(summary.body, fontSize = (12f * metrics.textScale).sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            summary.example?.let {
+                Text(it, fontSize = (11f * metrics.textScale).sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+            }
             sharePattern?.let { pattern ->
-                Text("Share-safe result", fontWeight = FontWeight.Bold)
                 Text(
                     text = pattern,
                     modifier = Modifier.testTag("wordlySharePreview"),
+                    fontSize = (9f * metrics.textScale).sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+        }
+        Button(
+            onClick = onReturnHome,
+            modifier =
+                Modifier
+                    .width((100f * metrics.textScale).coerceAtLeast(78f).dp)
+                    .height((metrics.cluePanelHeight - 30f).coerceIn(46f, 76f).dp),
+            shape = RoundedCornerShape(20.dp),
+            contentPadding = PaddingValues(horizontal = 6.dp),
+        ) {
+            Text("Done", fontWeight = FontWeight.Bold, fontSize = (13f * metrics.textScale).sp, maxLines = 1)
         }
     }
 }
