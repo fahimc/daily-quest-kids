@@ -174,6 +174,7 @@ private fun MainQuestScaffold(
                             navController.navigate("puzzle/${card.puzzle.id}")
                         }
                     },
+                    onOpenHowToPlay = { navController.navigate(Route.HowToPlay.path) },
                     onOpenParentInfo = { navController.navigate(Route.ParentInfo.path) },
                 )
             }
@@ -188,6 +189,9 @@ private fun MainQuestScaffold(
             }
             composable(Route.ParentInfo.path) {
                 ParentInformationScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Route.HowToPlay.path) {
+                HowToPlayScreen(onBack = { navController.popBackStack() })
             }
             composable("puzzle/{puzzleId}") { entry ->
                 val puzzleId = entry.arguments?.getString("puzzleId").orEmpty()
@@ -248,6 +252,10 @@ private class SettingsActions(
 ) {
     fun openParentInfo() {
         navController.navigate(Route.ParentInfo.path)
+    }
+
+    fun openHowToPlay() {
+        navController.navigate(Route.HowToPlay.path)
     }
 
     fun resetProgress() {
@@ -421,6 +429,7 @@ private fun WelcomePanel(
 private fun HomeScreen(
     state: DailyHomeUiState,
     onOpenPuzzle: (QuestCardUiState) -> Unit,
+    onOpenHowToPlay: () -> Unit,
     onOpenParentInfo: () -> Unit,
 ) {
     ScreenColumn {
@@ -434,7 +443,11 @@ private fun HomeScreen(
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(12.dp))
+        Button(onClick = onOpenHowToPlay, modifier = Modifier.fillMaxWidth()) {
+            Text("How to play")
+        }
+        Spacer(Modifier.height(12.dp))
         HeroStreakPanel(state = state)
         Spacer(Modifier.height(16.dp))
         SeasonStateMessage(state.dayState)
@@ -701,6 +714,9 @@ private fun SettingsScreen(
         SettingToggle("Large puzzle text", settings.largePuzzleText, actions::largePuzzleTextChanged)
         SettingToggle("Optional timer", settings.optionalTimer, actions::timerChanged)
         SettingToggle("Mistake checking", settings.mistakeChecking, actions::mistakeCheckingChanged)
+        Button(onClick = actions::openHowToPlay, modifier = Modifier.fillMaxWidth()) {
+            Text("How to play")
+        }
         Button(onClick = actions::openParentInfo, modifier = Modifier.fillMaxWidth()) {
             Text("Parent information")
         }
@@ -771,6 +787,96 @@ private fun ParentInformationScreen(onBack: () -> Unit) {
         }
         Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
             Text("Back")
+        }
+    }
+}
+
+@Composable
+private fun HowToPlayScreen(onBack: () -> Unit) {
+    ScreenColumn {
+        Text("How to play", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text(
+            text = "Finish one small puzzle from each land. Hints are for learning and do not break a streak.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        GuideSectionCard(
+            title = "Wordly",
+            subtitle = "Find the hidden 5-letter word.",
+            steps =
+                listOf(
+                    "Type a 5-letter guess, then tap Check.",
+                    "Green means the letter is in the right spot.",
+                    "Yellow means the letter is in the word but moved.",
+                    "Dark means that letter is not in the word.",
+                    "Tap the clue box to make it bigger. Use Hint when stuck.",
+                ),
+        )
+        GuideSectionCard(
+            title = "Spelling B",
+            subtitle = "Build words from the honeycomb letters.",
+            steps =
+                listOf(
+                    "Every word must use the middle letter.",
+                    "Use each outside letter as often as you need.",
+                    "Longer words score more.",
+                    "Try prefixes and endings when you get stuck.",
+                ),
+        )
+        GuideSectionCard(
+            title = "Crossword",
+            subtitle = "Fill the grid using clues.",
+            steps =
+                listOf(
+                    "Pick a clue, then type the answer into the squares.",
+                    "Across answers go left to right. Down answers go top to bottom.",
+                    "Use crossing letters to solve harder clues.",
+                    "A hint can reveal a helpful letter or clue nudge.",
+                ),
+        )
+        GuideSectionCard(
+            title = "Sudoku",
+            subtitle = "Complete the number grid.",
+            steps =
+                listOf(
+                    "Each row needs the numbers 1 to 9 once.",
+                    "Each column needs the numbers 1 to 9 once.",
+                    "Each 3 by 3 box also needs 1 to 9 once.",
+                    "Start where the most numbers are already filled in.",
+                ),
+        )
+        GuideSectionCard(
+            title = "Connections",
+            subtitle = "Find groups that belong together.",
+            steps =
+                listOf(
+                    "Look for four words with the same idea.",
+                    "Select four words, then submit the group.",
+                    "Solved groups leave the board.",
+                    "Read the explanation to learn the link.",
+                ),
+        )
+        QuestPanel {
+            Text("Today", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Wordly is fully playable. The other daily lands show previews while their full engines are being built.")
+        }
+        Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+            Text("Back")
+        }
+    }
+}
+
+@Composable
+private fun GuideSectionCard(
+    title: String,
+    subtitle: String,
+    steps: List<String>,
+) {
+    QuestPanel {
+        Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(subtitle, style = MaterialTheme.typography.bodyLarge)
+        steps.forEachIndexed { index, step ->
+            Text("${index + 1}. $step")
         }
     }
 }
@@ -854,6 +960,7 @@ private enum class Route(
     Streaks("streaks", "Streaks", "S"),
     Settings("settings", "Settings", "G"),
     ParentInfo("parent-info", "Parent Info", "I"),
+    HowToPlay("how-to-play", "How to Play", "?"),
 }
 
 private const val WELCOME_PAGE = -1
