@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.DailyQuestKids" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:windowSplashScreenBackground">@color/quest_splash</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">#2E7D32</item>
+    </style>
+</resources>
