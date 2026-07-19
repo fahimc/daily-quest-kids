@@ -24,8 +24,9 @@ class MainActivityInstrumentedTest {
     fun homeShowsDailyQuestBrand() {
         openHomeFromAnyLaunchState()
 
-        compose.onNodeWithText("Daily Quest Kids").assertIsDisplayed()
+        compose.onNodeWithTag("questLogo").assertIsDisplayed()
         compose.onNodeWithTag("heroStreakPanel").assertIsDisplayed()
+        compose.onNodeWithTag("questBottomBar").assertIsDisplayed()
     }
 
     @Test
@@ -42,15 +43,24 @@ class MainActivityInstrumentedTest {
     fun howToPlayGuideOpensFromHome() {
         openHomeFromAnyLaunchState()
 
-        compose.onNodeWithText("How to play").assertIsDisplayed().performClick()
+        compose.onNodeWithTag("homeHowToButton").assertIsDisplayed().performClick()
 
         compose.waitUntilAtLeastOneExists(hasText("Find the hidden 5-letter word."), 3_000L)
         compose.onNodeWithText("Wordly").assertIsDisplayed()
         compose.onNodeWithText("Find the hidden 5-letter word.").assertIsDisplayed()
     }
 
+    @Test
+    fun achievementsTabOpensFromBottomNavigation() {
+        openHomeFromAnyLaunchState()
+
+        compose.onNodeWithText("Achievements").assertIsDisplayed().performClick()
+
+        compose.waitUntilAtLeastOneExists(hasText("Daily Five Badges"), 3_000L)
+        compose.onNodeWithText("Puzzle Lands").assertIsDisplayed()
+    }
+
     private fun openHomeFromAnyLaunchState() {
-        compose.waitUntilAtLeastOneExists(hasText("Daily Quest Kids"), 5_000L)
         compose.waitUntil(5_000L) {
             compose.onAllNodesWithText("Skip for now").fetchSemanticsNodes().isNotEmpty() ||
                 compose.onAllNodes(hasTestTag("heroStreakPanel")).fetchSemanticsNodes().isNotEmpty()
