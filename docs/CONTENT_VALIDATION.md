@@ -4,12 +4,15 @@ Validators currently check:
 
 - Schema version presence.
 - Season version presence.
-- Day numbering.
+- Sequential day numbering.
 - Missing categories.
+- Duplicate categories inside a day.
 - Duplicate puzzle IDs.
-- Progressive hints.
+- Nonblank curriculum tags.
+- Progressive hints with sequential orders from 1.
 - Answer-leaking hint flags.
 - Automated review flags.
+- Production human-review flags.
 - Wordly length, dictionary inclusion and prohibited vocabulary.
 - Spelling B unique letters, centre-letter inclusion and target word legality.
 - Crossword grid dimensions and answer bounds.
@@ -18,7 +21,7 @@ Validators currently check:
 
 Production validation must still add:
 
-- full 365-day count enforcement in pipeline export.
+- pipeline export wiring for the full 365-day count enforcement.
 - stronger Sudoku uniqueness and technique validation.
 - crossword crossing consistency.
 - semantic ambiguity detection for Connections.

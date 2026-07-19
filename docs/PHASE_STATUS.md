@@ -37,8 +37,8 @@ Known limitations:
 
 ## Phase 1 - Curriculum Research and Content Models
 
-Status: model, validator and engine JVM tests pass; content-inspector VRT is
-pending.
+Status: preview content pack, stricter validator and engine JVM tests pass;
+content-inspector VRT is pending.
 
 Completed scope:
 
@@ -46,6 +46,10 @@ Completed scope:
 - Versioned puzzle-pack schema documented.
 - Kotlin models for puzzle types, hints, progress and share cards added.
 - Initial content-safety and structure validators added.
+- Five-day preview pack added for app-level phase development.
+- Validator now rejects non-sequential days, duplicate categories, blank
+  curriculum tags, non-sequential hint orders and missing production human
+  review.
 
 Verified on 2026-07-19:
 
@@ -53,6 +57,9 @@ Verified on 2026-07-19:
 - Missing category rejection.
 - Duplicate ID rejection.
 - Full-season count rejection.
+- Sequential day-index rejection.
+- Non-sequential hint rejection.
+- Production human-review rejection.
 - UTC date and streak behaviour.
 - Wordly repeated-letter scoring.
 - Share-card answer leak detection.
@@ -65,3 +72,103 @@ Known limitations:
 
 - Season One content has not been human reviewed.
 - Production pack generation is not complete.
+
+## Phase 2 - Design System and Responsive Shell
+
+Status: preview shell implemented; screenshot/VRT approval is pending a
+device/emulator.
+
+Completed scope:
+
+- Bottom navigation shell for Home, Streaks and Settings.
+- Reusable panels, progress dots, puzzle cards and category styling.
+- High-contrast theme mode connected to settings.
+- Instrumented screenshot-smoke target updated for the Daily Home hero panel.
+
+Verified on 2026-07-19:
+
+- `:app:compileDebugKotlin`
+- `:app:compileDebugAndroidTestKotlin`
+- Result: passed.
+
+Known limitations:
+
+- Responsive VRT baselines are not captured yet.
+- Feature puzzle UIs are preview screens, not full gameplay.
+
+## Phase 3 - First-Launch Flows
+
+Status: implemented for local preview.
+
+Completed scope:
+
+- Splash screen.
+- Three-step onboarding flow.
+- Welcome-to-home transition.
+- Settings screen with sound, haptics, motion, contrast, text size, timer and
+  mistake-checking toggles.
+- Parent information screen.
+- Reset progress and reset onboarding actions.
+- Preference persistence through Android DataStore.
+
+Verified on 2026-07-19:
+
+- `:app:testDebugUnitTest`
+- `:app:compileDebugAndroidTestKotlin`
+- Result: passed.
+
+Known limitations:
+
+- Instrumented onboarding navigation has not executed on a device/emulator.
+
+## Phase 4 - Date and Persistence Layer
+
+Status: lightweight local persistence implemented; Room-backed history remains
+planned.
+
+Completed scope:
+
+- UTC season-day state feeds the app home coordinator.
+- Progress persistence through Android DataStore.
+- Started/completed puzzle IDs persist locally.
+- Current/best Daily Five streak metrics are derived from stored completion
+  days.
+- Greatest observed day is stored to detect device date rollback.
+- User-facing rollback message preserves progress confidence when the date
+  moves earlier than the last observed day.
+
+Verified on 2026-07-19:
+
+- Coordinator unit tests for card state, Daily Five completion and rollback
+  messaging.
+- Result: passed.
+
+Known limitations:
+
+- Room schema, migrations, backup/restore and richer history queries are still
+  pending.
+
+## Phase 5 - State-Driven Daily Home
+
+Status: implemented against the five-day preview pack.
+
+Completed scope:
+
+- Daily Home derives all visible card state from puzzle pack data, date state
+  and stored progress.
+- Current, solved, started and locked card states.
+- Daily Five progress, current streak, best streak, perfect days and total
+  solved metrics.
+- Category streak counts and hint counts shown per card.
+- Puzzle preview screen marks a puzzle solved and returns home.
+- Season-complete and device-date rollback messaging.
+
+Verified on 2026-07-19:
+
+- `:puzzle-validator:test :app:testDebugUnitTest ktlintCheck detekt :app:compileDebugAndroidTestKotlin`
+- Result: passed.
+
+Known limitations:
+
+- Interactive gameplay for the five puzzle types starts in later phases.
+- Android UI tests have compiled but not run on physical/emulated hardware.

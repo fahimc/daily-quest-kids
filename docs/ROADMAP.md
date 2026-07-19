@@ -19,8 +19,18 @@ Complete reusable game UI components, navigation shell and responsive baselines.
 Implement splash, welcome, onboarding, settings and parent information with
 local preference persistence.
 
-## Phases 4-17
+## Phase 4 - Date and Persistence Layer
 
-Implement date/persistence, five puzzle features, streaks, achievements,
-secure sharing, deterministic content pipeline, full season content,
-simulation, accessibility/performance polish and release packaging.
+Persist local progress, map the current UTC date to season content and protect
+streaks against device date rollback.
+
+## Phase 5 - State-Driven Daily Home
+
+Render the Daily Home from date state, pack content, settings and persisted
+progress.
+
+## Phases 6-17
+
+Implement the five puzzle features, streaks, achievements, secure sharing,
+deterministic content pipeline, full season content, simulation,
+accessibility/performance polish and release packaging.

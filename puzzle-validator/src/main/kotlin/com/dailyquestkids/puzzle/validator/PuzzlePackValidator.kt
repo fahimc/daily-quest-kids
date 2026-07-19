@@ -27,12 +27,18 @@ class PuzzlePackValidator(
             errors += "production pack must contain exactly $SEASON_LENGTH days"
         }
 
+        pack.days.forEachIndexed { expectedIndex, day ->
+            if (day.dayIndex != expectedIndex) {
+                errors += "day index ${day.dayIndex} should be $expectedIndex"
+            }
+        }
+
         val puzzleIds = mutableSetOf<String>()
         pack.days.forEach { day ->
             validateDay(day, requireFullSeason, errors)
             day.puzzles.forEach { puzzle ->
                 if (!puzzleIds.add(puzzle.id)) errors += "duplicate puzzle id ${puzzle.id}"
-                validatePuzzle(puzzle, errors)
+                validatePuzzle(puzzle, requireFullSeason, errors)
             }
         }
 
@@ -50,6 +56,7 @@ class PuzzlePackValidator(
         val categories = day.puzzles.map { it.category }.toSet()
         val missing = PuzzleCategory.entries.filterNot { it in categories }
         if (missing.isNotEmpty()) errors += "day ${day.dayIndex} missing categories $missing"
+        if (categories.size != day.puzzles.size) errors += "day ${day.dayIndex} contains duplicate categories"
         if (requireFullSeason && day.puzzles.size != PuzzleCategory.entries.size) {
             errors += "day ${day.dayIndex} must contain exactly five puzzles"
         }
@@ -57,12 +64,12 @@ class PuzzlePackValidator(
 
     private fun validatePuzzle(
         puzzle: Puzzle,
+        requireProduction: Boolean,
         errors: MutableList<String>,
     ) {
-        if (puzzle.id.isBlank()) errors += "blank puzzle id"
-        if (puzzle.hints.isEmpty()) errors += "${puzzle.id} must provide progressive hints"
-        if (puzzle.hints.any { it.revealsAnswer }) errors += "${puzzle.id} has an answer-leaking hint"
-        if (!puzzle.review.automatedReviewPassed) errors += "${puzzle.id} has not passed automated review"
+        validatePuzzleMetadata(puzzle, errors)
+        validatePuzzleHints(puzzle, errors)
+        validatePuzzleReview(puzzle, requireProduction, errors)
 
         when (puzzle) {
             is WordlyPuzzle -> validateWordly(puzzle, errors)
@@ -70,6 +77,38 @@ class PuzzlePackValidator(
             is CrosswordPuzzle -> validateCrossword(puzzle, errors)
             is SudokuPuzzle -> validateSudoku(puzzle, errors)
             is ConnectionsPuzzle -> validateConnections(puzzle, errors)
+        }
+    }
+
+    private fun validatePuzzleMetadata(
+        puzzle: Puzzle,
+        errors: MutableList<String>,
+    ) {
+        if (puzzle.id.isBlank()) errors += "blank puzzle id"
+        if (puzzle.curriculumTags.isEmpty() || puzzle.curriculumTags.any { it.isBlank() }) {
+            errors += "${puzzle.id} must provide curriculum tags"
+        }
+    }
+
+    private fun validatePuzzleHints(
+        puzzle: Puzzle,
+        errors: MutableList<String>,
+    ) {
+        if (puzzle.hints.isEmpty()) errors += "${puzzle.id} must provide progressive hints"
+        if (puzzle.hints.map { it.order } != (1..puzzle.hints.size).toList()) {
+            errors += "${puzzle.id} hint orders must be sequential from 1"
+        }
+        if (puzzle.hints.any { it.revealsAnswer }) errors += "${puzzle.id} has an answer-leaking hint"
+    }
+
+    private fun validatePuzzleReview(
+        puzzle: Puzzle,
+        requireProduction: Boolean,
+        errors: MutableList<String>,
+    ) {
+        if (!puzzle.review.automatedReviewPassed) errors += "${puzzle.id} has not passed automated review"
+        if (requireProduction && !puzzle.review.humanReviewed) {
+            errors += "${puzzle.id} requires human review before production release"
         }
     }
 

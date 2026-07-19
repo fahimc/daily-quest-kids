@@ -15,6 +15,19 @@
   Android test APK compilation.
 - Documented that publishing the live GitHub Actions workflow requires a token
   with the `workflow` scope.
+- Added a five-day preview puzzle pack wired into the app through
+  `SamplePackRepository`.
+- Hardened content validation for sequential day indexes, duplicate day
+  categories, curriculum tags, sequential hint orders and production human
+  review.
+- Implemented splash, onboarding, settings, parent information and local
+  DataStore preference/progress persistence.
+- Added a state-driven Daily Home with card status, Daily Five progress,
+  streak metrics and puzzle preview completion flow.
+- Added coordinator unit tests for card state, Daily Five completion and device
+  date rollback messaging.
+- Verified the phase 1-5 focused non-device gate with the Gradle user home
+  redirected to `D:\gradle-user-home` because the C: drive was nearly full.
 
 ## Phase 0
 
@@ -22,5 +35,11 @@
 
 ## Phase 1
 
-- Status: model, validator and engine JVM tests pass; content-inspector VRT is
+- Status: preview content pack, stricter validator and JVM tests pass;
+  content-inspector VRT and full season production content are still pending.
+
+## Phases 2-5
+
+- Status: app shell, first-launch flows, local persistence and state-driven
+  Daily Home are implemented for the preview pack; device/emulator execution is
   still pending.

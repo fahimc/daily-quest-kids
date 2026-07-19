@@ -53,9 +53,12 @@ private val QuestTypography =
     )
 
 @Composable
-fun DailyQuestTheme(content: @Composable () -> Unit) {
+fun DailyQuestTheme(
+    highContrast: Boolean = false,
+    content: @Composable () -> Unit,
+) {
     MaterialTheme(
-        colorScheme = QuestLightScheme,
+        colorScheme = if (highContrast) QuestLightScheme.highContrastCopy() else QuestLightScheme,
         typography = QuestTypography,
         content = content,
     )

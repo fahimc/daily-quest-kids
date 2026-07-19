@@ -20,19 +20,30 @@ object FixturePackFactory {
         PuzzlePack(
             schemaVersion = 1,
             seasonVersion = "sample-foundation",
-            seasonStartDateUtc = "2026-09-01",
+            seasonStartDateUtc = SEASON_START_DATE,
             checksum = "sample-not-production",
             days = listOf(dayOne()),
         )
 
-    fun dayOne(): DailyPuzzleSet =
+    fun phasePreviewPack(dayCount: Int = 5): PuzzlePack =
+        PuzzlePack(
+            schemaVersion = 1,
+            seasonVersion = "phase-preview",
+            seasonStartDateUtc = SEASON_START_DATE,
+            checksum = "preview-not-production",
+            days = List(dayCount) { dayIndex -> day(dayIndex) },
+        )
+
+    fun dayOne(): DailyPuzzleSet = day(dayIndex = 0)
+
+    private fun day(dayIndex: Int): DailyPuzzleSet =
         DailyPuzzleSet(
-            dayIndex = 0,
-            globalDayNumber = 1,
+            dayIndex = dayIndex,
+            globalDayNumber = dayIndex + 1,
             puzzles =
                 listOf(
                     WordlyPuzzle(
-                        id = "wordly-001",
+                        id = "wordly-${dayId(dayIndex)}",
                         difficulty = Difficulty.STARTER,
                         curriculumTags = listOf("english:spelling", "year:3"),
                         hints =
@@ -48,7 +59,7 @@ object FixturePackFactory {
                         exampleSentence = "We can share the crayons.",
                     ),
                     SpellingBeePuzzle(
-                        id = "spelling-001",
+                        id = "spelling-${dayId(dayIndex)}",
                         difficulty = Difficulty.STARTER,
                         curriculumTags = listOf("english:vocabulary", "year:3"),
                         hints =
@@ -70,7 +81,7 @@ object FixturePackFactory {
                             ),
                     ),
                     CrosswordPuzzle(
-                        id = "crossword-001",
+                        id = "crossword-${dayId(dayIndex)}",
                         difficulty = Difficulty.STARTER,
                         curriculumTags = listOf("english:clues", "science:plants"),
                         hints =
@@ -90,7 +101,7 @@ object FixturePackFactory {
                             ),
                     ),
                     SudokuPuzzle(
-                        id = "sudoku-001",
+                        id = "sudoku-${dayId(dayIndex)}",
                         difficulty = Difficulty.STARTER,
                         curriculumTags = listOf("maths:logic", "year:3"),
                         hints =
@@ -180,7 +191,7 @@ object FixturePackFactory {
                             ),
                     ),
                     ConnectionsPuzzle(
-                        id = "connections-001",
+                        id = "connections-${dayId(dayIndex)}",
                         difficulty = Difficulty.STARTER,
                         curriculumTags = listOf("english:vocabulary", "reasoning:classification"),
                         hints =
@@ -201,10 +212,14 @@ object FixturePackFactory {
                 ),
         )
 
+    private fun dayId(dayIndex: Int): String = (dayIndex + 1).toString().padStart(3, '0')
+
     private fun automatedOnlyReview(): ReviewMetadata =
         ReviewMetadata(
             automatedReviewPassed = true,
             humanReviewed = false,
             notes = "Automated fixture review only. Human review is required before production release.",
         )
+
+    private const val SEASON_START_DATE = "2026-07-19"
 }

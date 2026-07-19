@@ -5,7 +5,7 @@ import com.dailyquestkids.core.model.PuzzlePack
 import com.dailyquestkids.core.testing.FixturePackFactory
 
 class SamplePackRepository {
-    val pack: PuzzlePack = FixturePackFactory.oneDayPack()
+    val pack: PuzzlePack = FixturePackFactory.phasePreviewPack()
 
     fun dailySetFor(dayIndex: Int): DailyPuzzleSet =
         pack.days.firstOrNull { it.dayIndex == dayIndex }

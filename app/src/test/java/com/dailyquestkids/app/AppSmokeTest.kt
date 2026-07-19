@@ -12,7 +12,7 @@ class AppSmokeTest {
     @Test
     fun samplePackLoadsDayOneForSeasonStart() {
         val repository = SamplePackRepository()
-        val clock = Clock.fixed(Instant.parse("2026-09-01T12:00:00Z"), ZoneOffset.UTC)
+        val clock = Clock.fixed(Instant.parse("2026-07-19T12:00:00Z"), ZoneOffset.UTC)
         val calendar = SeasonCalendar(repository.pack.seasonStartDateUtc, clock)
 
         val day = repository.dailySetFor(calendar.currentDayIndex())

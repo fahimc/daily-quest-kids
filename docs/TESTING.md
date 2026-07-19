@@ -28,6 +28,11 @@ Device/emulator command:
 Latest verification on 2026-07-19:
 
 - Local non-device gate: passed.
+- Phase 1-5 focused gate: passed with
+  `$env:GRADLE_USER_HOME = "D:\gradle-user-home"` because C: had very little
+  free space.
+- Focused command:
+  `.\gradlew.bat --no-daemon --no-parallel --console=plain "-Dorg.gradle.workers.max=1" :puzzle-validator:test :app:testDebugUnitTest ktlintCheck detekt :app:compileDebugAndroidTestKotlin`
 - Connected Android tests: blocked by `No connected devices!`.
 - Screenshot smoke test compiles into the Android test APK but has not executed
   on hardware/emulator yet.
