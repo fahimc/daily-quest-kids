@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
@@ -358,29 +359,86 @@ private fun WordlyTopBar(
                 ) {
                     Text("W", color = Color.White, fontWeight = FontWeight.Black, fontSize = (26f * metrics.textScale).sp)
                 }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Wordly",
-                        fontWeight = FontWeight.Black,
-                        fontSize = (28f * metrics.textScale).sp,
-                        maxLines = 1,
-                    )
-                    Text("Letter Garden", fontSize = (11f * metrics.textScale).sp, maxLines = 1)
-                }
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = Color.White,
-                    border = BorderStroke(1.dp, Color(0xFFB4CE9F)),
-                ) {
-                    Column(
-                        modifier = Modifier.padding(horizontal = (10f * metrics.textScale).dp, vertical = (4f * metrics.textScale).dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text("Attempts", fontSize = (10f * metrics.textScale).sp, maxLines = 1)
-                        Text(state.attemptsLabel, fontWeight = FontWeight.Black, fontSize = (18f * metrics.textScale).sp)
-                    }
-                }
+                AutoSizeText(
+                    text = "Wordly",
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .testTag("wordlyTitleText"),
+                    spec =
+                        AutoSizeTextSpec(
+                            maxFontSizeSp = 28f * metrics.textScale,
+                            minFontSizeSp = 16f,
+                            maxLines = 1,
+                            fontWeight = FontWeight.Black,
+                            textAlign = TextAlign.Start,
+                            contentAlignment = Alignment.CenterStart,
+                            softWrap = false,
+                        ),
+                )
+                WordlyAttemptsBadge(attemptsLabel = state.attemptsLabel, metrics = metrics)
             }
+        }
+    }
+}
+
+@Composable
+private fun WordlyAttemptsBadge(
+    attemptsLabel: String,
+    metrics: WordlyLayoutMetrics,
+) {
+    Surface(
+        modifier =
+            Modifier
+                .width((82f * metrics.textScale).coerceIn(62f, 88f).dp)
+                .fillMaxHeight()
+                .testTag("wordlyAttemptsBadge"),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White,
+        border = BorderStroke(1.dp, Color(0xFFB4CE9F)),
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 4.dp, vertical = 3.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            AutoSizeText(
+                text = "Attempts",
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(0.45f)
+                        .testTag("wordlyAttemptsLabel"),
+                spec =
+                    AutoSizeTextSpec(
+                        maxFontSizeSp = 8.5f * metrics.textScale,
+                        minFontSizeSp = 3.8f,
+                        maxLines = 1,
+                        fontWeight = FontWeight.Normal,
+                        textAlign = TextAlign.Center,
+                        softWrap = false,
+                    ),
+            )
+            AutoSizeText(
+                text = attemptsLabel,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(0.55f)
+                        .testTag("wordlyAttemptsValue"),
+                spec =
+                    AutoSizeTextSpec(
+                        maxFontSizeSp = 14f * metrics.textScale,
+                        minFontSizeSp = 5f,
+                        maxLines = 1,
+                        fontWeight = FontWeight.Black,
+                        textAlign = TextAlign.Center,
+                        softWrap = false,
+                    ),
+            )
         }
     }
 }
@@ -395,26 +453,29 @@ private fun WordlyStatusStrip(
             Modifier
                 .fillMaxWidth()
                 .height(metrics.statusHeight.dp),
-        horizontalArrangement = Arrangement.spacedBy((6f * metrics.textScale).dp),
+        horizontalArrangement = Arrangement.spacedBy((4f * metrics.textScale).dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         WordlyPill(
             text = state.streakLabel,
             metrics = metrics,
-            modifier = Modifier.weight(0.82f),
+            modifier = Modifier.weight(0.72f),
             tag = "wordlyStreakPill",
+            maxFontSizeSp = 10f * metrics.textScale,
         )
         WordlyPill(
             text = state.prompt,
             metrics = metrics,
-            modifier = Modifier.weight(2f),
+            modifier = Modifier.weight(2.4f),
             tag = "wordlyPromptPill",
+            maxFontSizeSp = 9.6f * metrics.textScale,
         )
         WordlyPill(
             text = state.starLabel,
             metrics = metrics,
-            modifier = Modifier.weight(0.88f),
+            modifier = Modifier.weight(0.76f),
             tag = "wordlyStarsPill",
+            maxFontSizeSp = 10f * metrics.textScale,
         )
     }
 }
@@ -425,6 +486,7 @@ private fun WordlyPill(
     metrics: WordlyLayoutMetrics,
     modifier: Modifier,
     tag: String,
+    maxFontSizeSp: Float,
 ) {
     Surface(
         modifier =
@@ -440,11 +502,11 @@ private fun WordlyPill(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(horizontal = (7f * metrics.textScale).dp),
+                    .padding(horizontal = (5f * metrics.textScale).dp),
             spec =
                 AutoSizeTextSpec(
-                    maxFontSizeSp = 13f * metrics.textScale,
-                    minFontSizeSp = 7.5f,
+                    maxFontSizeSp = maxFontSizeSp,
+                    minFontSizeSp = 3.8f,
                     maxLines = 1,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
@@ -462,7 +524,7 @@ private fun AutoSizeText(
 ) {
     val textMeasurer = rememberTextMeasurer()
     val density = LocalDensity.current
-    BoxWithConstraints(modifier = modifier, contentAlignment = spec.contentAlignment) {
+    BoxWithConstraints(modifier = modifier.clipToBounds(), contentAlignment = spec.contentAlignment) {
         val maxWidthPx = with(density) { maxWidth.toPx().toInt().coerceAtLeast(1) }
         val maxHeightPx = with(density) { maxHeight.toPx().toInt().coerceAtLeast(1) }
         val constraints =
@@ -517,8 +579,9 @@ private fun fittedFontSizeSp(
     constraints: Constraints,
     spec: AutoSizeTextSpec,
 ): Float {
+    val minimumFontSize = minOf(spec.minFontSizeSp, spec.maxFontSizeSp)
     var fontSize = spec.maxFontSizeSp
-    while (fontSize > spec.minFontSizeSp) {
+    while (fontSize >= minimumFontSize) {
         val result =
             textMeasurer.measure(
                 text = AnnotatedString(text),
@@ -537,9 +600,9 @@ private fun fittedFontSizeSp(
         if (!result.didOverflowWidth && !result.didOverflowHeight) {
             return fontSize
         }
-        fontSize -= 0.5f
+        fontSize -= 0.25f
     }
-    return spec.minFontSizeSp
+    return minimumFontSize
 }
 
 @Composable

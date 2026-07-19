@@ -1,5 +1,8 @@
 package com.dailyquestkids.app
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
@@ -58,30 +61,17 @@ class WordlyVisualStateInstrumentedTest {
     }
 
     @Test
+    fun topChromeVisualGuardBandsStayClear() {
+        setWordlyContent(WordlyGameEngine.initial(puzzle))
+
+        assertNoTextInkTouchesEdges("wordlyAttemptsBadge", includeVerticalEdges = true)
+        assertNoTextInkTouchesEdges("wordlyPromptPill", includeVerticalEdges = false)
+        assertNoTextInkTouchesEdges("wordlyStarsPill", includeVerticalEdges = false)
+    }
+
+    @Test
     fun cluePanelExpandsAndCollapses() {
-        compose.setContent {
-            DailyQuestTheme {
-                WordlyGameScreen(
-                    state =
-                        WordlyUiMapper.map(
-                            puzzle = puzzle,
-                            gameState = WordlyGameEngine.initial(puzzle),
-                            settings = QuestSettings(),
-                            homeState = homeState,
-                            transientMessage = null,
-                        ),
-                    actions =
-                        WordlyGameActions(
-                            onBack = {},
-                            onUseHint = {},
-                            onLetter = {},
-                            onDelete = {},
-                            onSubmit = {},
-                            onReturnHome = {},
-                        ),
-                )
-            }
-        }
+        setWordlyContent(WordlyGameEngine.initial(puzzle))
 
         compose.onAllNodesWithTag("wordlyExpandedCluePanel").assertCountEquals(0)
         compose.onNodeWithTag("wordlyCluePanel").performClick()
@@ -113,6 +103,15 @@ class WordlyVisualStateInstrumentedTest {
     }
 
     private fun assertWordlyStateRenders(state: WordlySaveState) {
+        setWordlyContent(state)
+
+        compose.onNodeWithTag("wordlyScreen").assertIsDisplayed()
+        val image = compose.onNodeWithTag("wordlyBoard").captureToImage()
+        assertTrue(image.width > 0)
+        assertTrue(image.height > 0)
+    }
+
+    private fun setWordlyContent(state: WordlySaveState) {
         compose.setContent {
             DailyQuestTheme {
                 WordlyGameScreen(
@@ -136,12 +135,56 @@ class WordlyVisualStateInstrumentedTest {
                 )
             }
         }
+    }
 
-        compose.onNodeWithTag("wordlyScreen").assertIsDisplayed()
-        val image = compose.onNodeWithTag("wordlyBoard").captureToImage()
+    private fun assertNoTextInkTouchesEdges(
+        tag: String,
+        includeVerticalEdges: Boolean,
+    ) {
+        val image = compose.onNodeWithTag(tag).captureToImage()
         assertTrue(image.width > 0)
         assertTrue(image.height > 0)
+        assertTrue("$tag has clipped text on a horizontal edge", textInkOnHorizontalEdges(image) == 0)
+        if (includeVerticalEdges) {
+            assertTrue("$tag has clipped text on a vertical edge", textInkOnVerticalEdges(image) == 0)
+        }
     }
+
+    private fun textInkOnHorizontalEdges(image: ImageBitmap): Int {
+        val pixels = image.toPixelMap()
+        val guard = edgeGuardPixels(image)
+        var inkCount = 0
+        for (y in guard until image.height - guard) {
+            for (x in 0 until guard) {
+                if (pixels[x, y].isTextInk()) inkCount++
+            }
+            for (x in image.width - guard until image.width) {
+                if (pixels[x, y].isTextInk()) inkCount++
+            }
+        }
+        return inkCount
+    }
+
+    private fun textInkOnVerticalEdges(image: ImageBitmap): Int {
+        val pixels = image.toPixelMap()
+        val guard = edgeGuardPixels(image)
+        var inkCount = 0
+        for (y in 0 until guard) {
+            for (x in guard until image.width - guard) {
+                if (pixels[x, y].isTextInk()) inkCount++
+            }
+        }
+        for (y in image.height - guard until image.height) {
+            for (x in guard until image.width - guard) {
+                if (pixels[x, y].isTextInk()) inkCount++
+            }
+        }
+        return inkCount
+    }
+
+    private fun edgeGuardPixels(image: ImageBitmap): Int = (minOf(image.width, image.height) / 8).coerceIn(3, 10)
+
+    private fun Color.isTextInk(): Boolean = alpha > 0.8f && red < 0.32f && green < 0.35f && blue < 0.45f
 
     private fun type(
         text: String,
