@@ -28,3 +28,9 @@ Production validation must still add:
 - near-duplicate and hint-leak reports.
 - checksum generation and verification.
 - human-review report export.
+
+Current preview content:
+
+- Phase 6 includes 20 human-reviewed Wordly fixtures.
+- Later puzzle categories still use automated preview fixtures until their
+  feature/content phases.

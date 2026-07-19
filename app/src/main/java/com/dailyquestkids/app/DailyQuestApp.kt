@@ -67,6 +67,7 @@ import com.dailyquestkids.core.design.categoryStyle
 import com.dailyquestkids.core.model.Puzzle
 import com.dailyquestkids.core.model.PuzzleCategory
 import com.dailyquestkids.core.model.PuzzleStatus
+import com.dailyquestkids.core.model.WordlyPuzzle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -191,25 +192,49 @@ private fun MainQuestScaffold(
             composable("puzzle/{puzzleId}") { entry ->
                 val puzzleId = entry.arguments?.getString("puzzleId").orEmpty()
                 val puzzle = coordinator.puzzleById(puzzleId)
-                PuzzlePreviewScreen(
-                    puzzle = puzzle,
-                    status = progress.statusFor(puzzleId),
-                    onBack = { navController.popBackStack() },
-                    onComplete = {
-                        if (puzzle != null) {
-                            scope.launch {
-                                container.progressStore.markCompleted(
-                                    puzzleId = puzzle.id,
-                                    dayIndex = homeState.globalDayNumber - 1,
-                                    todaysPuzzleIds = coordinator.currentPuzzleIds(),
-                                )
-                                navController.navigate(Route.Home.path) {
-                                    popUpTo(Route.Home.path) { inclusive = true }
+                if (puzzle is WordlyPuzzle) {
+                    WordlyRoute(
+                        data =
+                            WordlyRouteData(
+                                puzzle = puzzle,
+                                settings = settings,
+                                homeState = homeState,
+                            ),
+                        dependencies =
+                            WordlyRouteDependencies(
+                                progressStore = container.progressStore,
+                                wordlyProgressStore = container.wordlyProgressStore,
+                                dayIndex = homeState.globalDayNumber - 1,
+                                todaysPuzzleIds = coordinator.currentPuzzleIds(),
+                            ),
+                        onBack = { navController.popBackStack() },
+                        onReturnHome = {
+                            navController.navigate(Route.Home.path) {
+                                popUpTo(Route.Home.path) { inclusive = true }
+                            }
+                        },
+                    )
+                } else {
+                    PuzzlePreviewScreen(
+                        puzzle = puzzle,
+                        status = progress.statusFor(puzzleId),
+                        onBack = { navController.popBackStack() },
+                        onComplete = {
+                            if (puzzle != null) {
+                                scope.launch {
+                                    container.progressStore.markCompleted(
+                                        puzzleId = puzzle.id,
+                                        dayIndex = homeState.globalDayNumber - 1,
+                                        todaysPuzzleIds = coordinator.currentPuzzleIds(),
+                                    )
+                                    navController.navigate(Route.Home.path) {
+                                        popUpTo(Route.Home.path) { inclusive = true }
+                                    }
                                 }
                             }
-                        }
-                    },
-                )
+                        },
+                    )
+                }
             }
         }
     }

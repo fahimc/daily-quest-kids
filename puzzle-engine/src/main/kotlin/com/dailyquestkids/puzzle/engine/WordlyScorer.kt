@@ -43,6 +43,7 @@ data class LetterScore(
 )
 
 enum class TileState {
+    EMPTY,
     CORRECT,
     PRESENT,
     ABSENT,

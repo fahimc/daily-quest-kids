@@ -29,8 +29,14 @@ streaks against device date rollback.
 Render the Daily Home from date state, pack content, settings and persisted
 progress.
 
-## Phases 6-17
+## Phase 6 - Wordly Engine and Feature
 
-Implement the five puzzle features, streaks, achievements, secure sharing,
-deterministic content pipeline, full season content, simulation,
+Deliver the reusable Wordly engine, responsive feature screen, keyboard,
+six-row board, duplicate scoring, hints, autosave, success/failure, learning
+summary, streak integration, share-safe result model and 20 reviewed fixtures.
+
+## Phases 7-17
+
+Implement the remaining four puzzle features, streaks, achievements, secure
+sharing, deterministic content pipeline, full season content, simulation,
 accessibility/performance polish and release packaging.

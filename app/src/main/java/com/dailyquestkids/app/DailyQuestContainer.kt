@@ -15,4 +15,5 @@ class DailyQuestContainer(
     val calendar = SeasonCalendar(packRepository.pack.seasonStartDateUtc, clock)
     val settingsStore = SettingsStore(applicationContext)
     val progressStore = ProgressStore(applicationContext)
+    val wordlyProgressStore = WordlyProgressStore(applicationContext)
 }

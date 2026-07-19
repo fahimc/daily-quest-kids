@@ -5,10 +5,13 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.dailyquestkids.core.common.StreakEngine
 import com.dailyquestkids.core.model.DailyFiveProgress
+import com.dailyquestkids.puzzle.engine.WordlyGameEngine
+import com.dailyquestkids.puzzle.engine.WordlySaveState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -86,6 +89,7 @@ class ProgressStore(
                 greatestDayObserved = preferences[Keys.GREATEST_DAY_OBSERVED] ?: 0,
                 startedPuzzleIds = preferences[Keys.STARTED_PUZZLES].orEmpty(),
                 completedPuzzleIds = preferences[Keys.COMPLETED_PUZZLES].orEmpty(),
+                failedPuzzleIds = preferences[Keys.FAILED_PUZZLES].orEmpty(),
                 dailyFiveCompletedDays =
                     preferences[Keys.DAILY_FIVE_DAYS]
                         .orEmpty()
@@ -116,8 +120,10 @@ class ProgressStore(
         context.questDataStore.edit { preferences ->
             val started = preferences[Keys.STARTED_PUZZLES].orEmpty()
             val completed = preferences[Keys.COMPLETED_PUZZLES].orEmpty() + puzzleId
+            val failed = preferences[Keys.FAILED_PUZZLES].orEmpty() - puzzleId
             preferences[Keys.STARTED_PUZZLES] = started + puzzleId
             preferences[Keys.COMPLETED_PUZZLES] = completed
+            preferences[Keys.FAILED_PUZZLES] = failed
 
             if (todaysPuzzleIds.isNotEmpty() && todaysPuzzleIds.all { it in completed }) {
                 val days = preferences[Keys.DAILY_FIVE_DAYS].orEmpty()
@@ -126,12 +132,30 @@ class ProgressStore(
         }
     }
 
+    suspend fun markFailed(puzzleId: String) {
+        context.questDataStore.edit { preferences ->
+            val started = preferences[Keys.STARTED_PUZZLES].orEmpty()
+            val failed = preferences[Keys.FAILED_PUZZLES].orEmpty()
+            preferences[Keys.STARTED_PUZZLES] = started + puzzleId
+            preferences[Keys.FAILED_PUZZLES] = failed + puzzleId
+        }
+    }
+
     suspend fun resetProgress() {
         context.questDataStore.edit { preferences ->
             preferences.remove(Keys.STARTED_PUZZLES)
             preferences.remove(Keys.COMPLETED_PUZZLES)
+            preferences.remove(Keys.FAILED_PUZZLES)
             preferences.remove(Keys.DAILY_FIVE_DAYS)
             preferences.remove(Keys.GREATEST_DAY_OBSERVED)
+            preferences
+                .asMap()
+                .keys
+                .filter { it.name.startsWith(Keys.WORDLY_STATE_PREFIX) }
+                .forEach { key ->
+                    @Suppress("UNCHECKED_CAST")
+                    preferences.remove(key as Preferences.Key<String>)
+                }
         }
     }
 
@@ -151,6 +175,29 @@ class ProgressStore(
             }
 }
 
+class WordlyProgressStore(
+    private val context: Context,
+) {
+    fun stateFor(puzzleId: String): Flow<WordlySaveState?> =
+        context.questDataStore.data.map { preferences ->
+            preferences[Keys.wordlyState(puzzleId)]?.let { payload ->
+                runCatching { WordlyGameEngine.decode(payload) }.getOrNull()
+            }
+        }
+
+    suspend fun save(state: WordlySaveState) {
+        context.questDataStore.edit { preferences ->
+            preferences[Keys.wordlyState(state.puzzleId)] = WordlyGameEngine.encode(state)
+        }
+    }
+
+    suspend fun clear(puzzleId: String) {
+        context.questDataStore.edit { preferences ->
+            preferences.remove(Keys.wordlyState(puzzleId))
+        }
+    }
+}
+
 private object Keys {
     val ONBOARDING_COMPLETE = booleanPreferencesKey("onboarding_complete")
     val SOUND = booleanPreferencesKey("sound_enabled")
@@ -163,5 +210,9 @@ private object Keys {
     val GREATEST_DAY_OBSERVED = intPreferencesKey("greatest_day_observed")
     val STARTED_PUZZLES = stringSetPreferencesKey("started_puzzle_ids")
     val COMPLETED_PUZZLES = stringSetPreferencesKey("completed_puzzle_ids")
+    val FAILED_PUZZLES = stringSetPreferencesKey("failed_puzzle_ids")
     val DAILY_FIVE_DAYS = stringSetPreferencesKey("daily_five_days")
+    const val WORDLY_STATE_PREFIX = "wordly_state_"
+
+    fun wordlyState(puzzleId: String): Preferences.Key<String> = stringPreferencesKey("$WORDLY_STATE_PREFIX$puzzleId")
 }

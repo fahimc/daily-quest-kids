@@ -33,9 +33,14 @@ Latest verification on 2026-07-19:
   free space.
 - Focused command:
   `.\gradlew.bat --no-daemon --no-parallel --console=plain "-Dorg.gradle.workers.max=1" :puzzle-validator:test :app:testDebugUnitTest ktlintCheck detekt :app:compileDebugAndroidTestKotlin`
+- Phase 6 Wordly focused gate: passed.
+- Phase 6 command:
+  `.\gradlew.bat --no-daemon --no-parallel --console=plain "-Dorg.gradle.workers.max=1" :puzzle-engine:test :puzzle-validator:test :app:testDebugUnitTest :app:compileDebugAndroidTestKotlin`
+- Static analysis command:
+  `.\gradlew.bat --no-daemon --no-parallel --console=plain "-Dorg.gradle.workers.max=1" ktlintCheck detekt`
 - Connected Android tests: blocked by `No connected devices!`.
-- Screenshot smoke test compiles into the Android test APK but has not executed
-  on hardware/emulator yet.
+- Screenshot smoke and Wordly visual-state tests compile into the Android test
+  APK but have not executed on hardware/emulator yet.
 
 Coverage target:
 

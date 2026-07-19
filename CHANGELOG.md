@@ -28,6 +28,15 @@
   date rollback messaging.
 - Verified the phase 1-5 focused non-device gate with the Gradle user home
   redirected to `D:\gradle-user-home` because the C: drive was nearly full.
+- Completed the Wordly feature with a reusable engine, responsive Compose
+  screen, six-row board, flexible keyboard layout, hints, autosave,
+  success/failure handling, learning summary and share-safe result model.
+- Expanded preview content to 20 human-reviewed Wordly fixtures.
+- Added Wordly tests for repeated-letter scoring properties, invalid guesses,
+  attempt exhaustion, hint order, save/restore, terminal-event acknowledgement,
+  share leakage, one-to-six-attempt wins, failure resume and UI mapping.
+- Added instrumented Wordly screenshot-smoke/VRT coverage targets for empty,
+  partial, repeated-letter, hint, success and failure states.
 
 ## Phase 0
 
@@ -43,3 +52,8 @@
 - Status: app shell, first-launch flows, local persistence and state-driven
   Daily Home are implemented for the preview pack; device/emulator execution is
   still pending.
+
+## Phase 6
+
+- Status: Wordly is implemented and local non-device tests pass; device/emulator
+  execution for screenshot/VRT tests is still pending.

@@ -22,11 +22,13 @@ data class StoredProgress(
     val greatestDayObserved: Int = 0,
     val startedPuzzleIds: Set<String> = emptySet(),
     val completedPuzzleIds: Set<String> = emptySet(),
+    val failedPuzzleIds: Set<String> = emptySet(),
     val dailyFiveCompletedDays: Set<Int> = emptySet(),
 ) {
     fun statusFor(puzzleId: String): PuzzleStatus =
         when {
             puzzleId in completedPuzzleIds -> PuzzleStatus.COMPLETED
+            puzzleId in failedPuzzleIds -> PuzzleStatus.FAILED
             puzzleId in startedPuzzleIds -> PuzzleStatus.IN_PROGRESS
             else -> PuzzleStatus.NOT_STARTED
         }

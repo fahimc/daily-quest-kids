@@ -20,6 +20,10 @@ Home flows can persist without accounts, internet or generated database code.
 Room-backed puzzle history, migrations and backup/restore remain available for
 the richer persistence phase.
 
+Wordly follows the intended feature split: `puzzle-engine` owns pure game state,
+scoring, validation, save JSON, completion events and share-safe models, while
+`app` owns Compose rendering and DataStore autosave.
+
 Dependency injection is currently manual through small provider classes. Hilt is
 still allowed later, but manual injection is justified while the module graph
 and storage contracts are still stabilising.

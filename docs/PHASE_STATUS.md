@@ -46,7 +46,7 @@ Completed scope:
 - Versioned puzzle-pack schema documented.
 - Kotlin models for puzzle types, hints, progress and share cards added.
 - Initial content-safety and structure validators added.
-- Five-day preview pack added for app-level phase development.
+- Preview pack added for app-level phase development.
 - Validator now rejects non-sequential days, duplicate categories, blank
   curriculum tags, non-sequential hint orders and missing production human
   review.
@@ -150,7 +150,7 @@ Known limitations:
 
 ## Phase 5 - State-Driven Daily Home
 
-Status: implemented against the five-day preview pack.
+Status: implemented against the preview pack.
 
 Completed scope:
 
@@ -172,3 +172,55 @@ Known limitations:
 
 - Interactive gameplay for the five puzzle types starts in later phases.
 - Android UI tests have compiled but not run on physical/emulated hardware.
+
+## Phase 6 - Wordly Engine and Feature
+
+Status: implemented; device/emulator execution for visual tests is pending.
+
+Completed scope:
+
+- Reusable Wordly engine added to `puzzle-engine`.
+- Six-row board state, duplicate-letter scoring, keyboard state, guess
+  validation, hints, save/restore, success/failure and terminal-event
+  acknowledgement.
+- DataStore-backed Wordly autosave keyed by puzzle id.
+- Failure state is now persisted separately from completion state.
+- Wordly route replaces the generic puzzle preview for Wordly puzzles.
+- Responsive Compose Wordly screen inspired by the supplied design, using
+  constraint-aware sizing plus flexible weighted rows for the board, controls
+  and keyboard.
+- Learning summary and share-safe result pattern generated without answer or
+  guess leakage.
+- Preview pack now includes 20 human-reviewed Wordly fixtures.
+
+Verified on 2026-07-19:
+
+- `:puzzle-engine:test`
+- `:puzzle-validator:test`
+- `:app:testDebugUnitTest`
+- `:app:compileDebugAndroidTestKotlin`
+- `ktlintCheck`
+- `detekt`
+- Result: passed.
+
+Wordly test coverage:
+
+- Exhaustive repeated-letter scoring properties over a small alphabet.
+- Invalid guesses and too-short guesses.
+- Attempt exhaustion and locked finished state.
+- Hint order and hint exhaustion.
+- Save/restore of attempts, current input, hints and terminal flags.
+- Terminal completion acknowledgement emits once.
+- Share-safe model answer/guess leak protection.
+- Success paths on attempts one through six.
+- Failure after process-style save/restore.
+- Keyboard state promotion.
+- UI mapper coverage for partial, hinted and terminal share states.
+- Instrumented screenshot-smoke targets for empty, partial, repeated-letter,
+  hint, success and failure visual states.
+
+Known limitations:
+
+- The instrumented visual tests compile but have not executed because no
+  emulator or device is attached.
+- Real Android screenshot baselines still need capture and approval.

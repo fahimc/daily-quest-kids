@@ -1,6 +1,7 @@
 package com.dailyquestkids.puzzle.engine
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WordlyScorerTest {
@@ -42,4 +43,45 @@ class WordlyScorerTest {
             result,
         )
     }
+
+    @Test
+    fun exhaustiveSmallAlphabetScoringNeverOverUsesRepeatedLetters() {
+        val words = generateWords(alphabet = listOf('a', 'b', 'c'), length = 5)
+
+        words.forEach { solution ->
+            words.forEach { guess ->
+                val scores = WordlyScorer.score(solution = solution, guess = guess)
+
+                listOf('a', 'b', 'c').forEach { letter ->
+                    val scoredCount =
+                        scores.count { score ->
+                            score.letter == letter && score.state != TileState.ABSENT
+                        }
+
+                    assertTrue(
+                        "$solution/$guess over-scored $letter: $scores",
+                        scoredCount <= solution.count { it == letter },
+                    )
+                }
+
+                scores.forEachIndexed { index, score ->
+                    if (guess[index] == solution[index]) {
+                        assertEquals(TileState.CORRECT, score.state)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun generateWords(
+        alphabet: List<Char>,
+        length: Int,
+    ): List<String> =
+        if (length == 0) {
+            listOf("")
+        } else {
+            generateWords(alphabet, length - 1).flatMap { prefix ->
+                alphabet.map { letter -> prefix + letter }
+            }
+        }
 }

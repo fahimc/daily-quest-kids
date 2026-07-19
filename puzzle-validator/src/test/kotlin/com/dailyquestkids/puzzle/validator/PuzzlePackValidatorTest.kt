@@ -169,4 +169,17 @@ class PuzzlePackValidatorTest {
         assertFalse(report.passed)
         assertTrue(report.errors.any { it.contains("requires human review") })
     }
+
+    @Test
+    fun phasePreviewIncludesAtLeastTwentyReviewedWordlyFixtures() {
+        val wordlyPuzzles =
+            FixturePackFactory
+                .phasePreviewPack()
+                .days
+                .map { day -> day.puzzles.filterIsInstance<WordlyPuzzle>().single() }
+
+        assertTrue(wordlyPuzzles.size >= 20)
+        assertTrue(wordlyPuzzles.all { it.review.humanReviewed })
+        assertTrue(wordlyPuzzles.map { it.solution }.toSet().size >= 20)
+    }
 }

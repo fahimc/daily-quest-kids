@@ -41,3 +41,14 @@ Current shell:
   labels.
 - The hero streak panel has a stable `heroStreakPanel` test tag for
   screenshot-smoke coverage.
+
+Wordly feature:
+
+- The Wordly screen uses a bright Letter Garden direction inspired by the
+  supplied reference: green/yellow/dark letter tiles, a compact top status bar,
+  six-row board, flexible keyboard and bottom clue panel.
+- Board tiles are constraint-sized from available phone width.
+- Keyboard rows use weighted flexible keys so labels stay inside the controls on
+  narrow phones.
+- Empty, partial, repeated-letter, hint, success and failure states have
+  instrumented screenshot-smoke targets.
