@@ -3,6 +3,7 @@ package com.dailyquestkids.puzzle.validator
 import com.dailyquestkids.core.model.ConnectionGroup
 import com.dailyquestkids.core.model.ConnectionsPuzzle
 import com.dailyquestkids.core.model.CrosswordDirection
+import com.dailyquestkids.core.model.CrosswordEntry
 import com.dailyquestkids.core.model.CrosswordPuzzle
 import com.dailyquestkids.core.model.DailyPuzzleSet
 import com.dailyquestkids.core.model.Puzzle
@@ -152,14 +153,14 @@ class PuzzlePackValidator(
         puzzle: CrosswordPuzzle,
         errors: MutableList<String>,
     ) {
-        if (puzzle.width != 7 || puzzle.height != 7) errors += "${puzzle.id} must be a 7x7 grid"
+        val answers = puzzle.entries.map { it.answer.lowercase() }
+        validateCrosswordShapeAndAnswers(puzzle, answers, errors)
+        val grid = CrosswordValidationGrid()
         puzzle.entries.forEach { entry ->
-            if (entry.answer.length < 3) errors += "${puzzle.id} crossword answer too short: ${entry.answer}"
-            val rowEnd = entry.row + if (entry.direction == CrosswordDirection.DOWN) entry.answer.lastIndex else 0
-            val columnEnd = entry.column + if (entry.direction == CrosswordDirection.ACROSS) entry.answer.lastIndex else 0
-            if (rowEnd !in 0 until puzzle.height || columnEnd !in 0 until puzzle.width) {
-                errors += "${puzzle.id} crossword answer out of bounds: ${entry.answer}"
-            }
+            validateCrosswordEntry(puzzle, entry, grid, errors)
+        }
+        if (grid.entryCells.isNotEmpty() && !crosswordEntriesAreConnected(grid.entryCells)) {
+            errors += "${puzzle.id} crossword entries must connect through crossings"
         }
         checkSafeWords(puzzle.id, puzzle.entries.map { it.answer }, errors)
     }
@@ -203,6 +204,82 @@ class PuzzlePackValidator(
         return solution.chunked(6).all { row -> row.toSet() == expected }
     }
 
+    private fun validateCrosswordShapeAndAnswers(
+        puzzle: CrosswordPuzzle,
+        answers: List<String>,
+        errors: MutableList<String>,
+    ) {
+        if (puzzle.width != 7 || puzzle.height != 7) errors += "${puzzle.id} must be a 7x7 grid"
+        if (puzzle.entries.size !in CROSSWORD_ENTRY_RANGE) errors += "${puzzle.id} must have 6 to 14 crossword entries"
+        if (answers.toSet().size != answers.size) errors += "${puzzle.id} crossword answers must be unique"
+    }
+
+    private fun validateCrosswordEntry(
+        puzzle: CrosswordPuzzle,
+        entry: CrosswordEntry,
+        grid: CrosswordValidationGrid,
+        errors: MutableList<String>,
+    ) {
+        val answer = entry.answer.lowercase()
+        if (answer.length < 3) errors += "${puzzle.id} crossword answer too short: ${entry.answer}"
+        if (answer.any { !it.isLetter() }) errors += "${puzzle.id} crossword answer must use letters only: ${entry.answer}"
+        if (entry.clue.isBlank()) errors += "${puzzle.id} crossword clue is required: ${entry.answer}"
+        if (entry.clue.lowercase().contains(answer)) errors += "${puzzle.id} crossword clue leaks answer: ${entry.answer}"
+        if (!crosswordEntryFits(puzzle, entry)) errors += "${puzzle.id} crossword answer out of bounds: ${entry.answer}"
+        recordCrosswordCells(puzzle.id, entry, answer, grid, errors)
+    }
+
+    private fun crosswordEntryFits(
+        puzzle: CrosswordPuzzle,
+        entry: CrosswordEntry,
+    ): Boolean {
+        val rowEnd = entry.row + if (entry.direction == CrosswordDirection.DOWN) entry.answer.lastIndex else 0
+        val columnEnd = entry.column + if (entry.direction == CrosswordDirection.ACROSS) entry.answer.lastIndex else 0
+        return rowEnd in 0 until puzzle.height && columnEnd in 0 until puzzle.width
+    }
+
+    private fun recordCrosswordCells(
+        id: String,
+        entry: CrosswordEntry,
+        answer: String,
+        grid: CrosswordValidationGrid,
+        errors: MutableList<String>,
+    ) {
+        val cells = crosswordEntryCells(entry)
+        grid.entryCells += cells.toSet()
+        cells.forEachIndexed { index, cell ->
+            val letter = answer[index]
+            val existing = grid.occupied[cell]
+            if (existing != null && existing != letter) {
+                errors += "$id crossword crossing conflict at $cell"
+            }
+            grid.occupied[cell] = letter
+        }
+    }
+
+    private fun crosswordEntryCells(entry: CrosswordEntry): List<Pair<Int, Int>> =
+        entry.answer.indices.map { offset ->
+            val row = entry.row + if (entry.direction == CrosswordDirection.DOWN) offset else 0
+            val column = entry.column + if (entry.direction == CrosswordDirection.ACROSS) offset else 0
+            row to column
+        }
+
+    private fun crosswordEntriesAreConnected(entryCells: List<Set<Pair<Int, Int>>>): Boolean {
+        val seen = mutableSetOf(0)
+        val pending = ArrayDeque<Int>()
+        pending += 0
+        while (pending.isNotEmpty()) {
+            val current = pending.removeFirst()
+            entryCells.forEachIndexed { index, cells ->
+                if (index !in seen && entryCells[current].intersect(cells).isNotEmpty()) {
+                    seen += index
+                    pending += index
+                }
+            }
+        }
+        return seen.size == entryCells.size
+    }
+
     private fun checkSafeWords(
         id: String,
         words: List<String>,
@@ -222,10 +299,16 @@ class PuzzlePackValidator(
             base + bonus
         }
 
+    private data class CrosswordValidationGrid(
+        val occupied: MutableMap<Pair<Int, Int>, Char> = mutableMapOf(),
+        val entryCells: MutableList<Set<Pair<Int, Int>>> = mutableListOf(),
+    )
+
     private companion object {
         const val SEASON_LENGTH = 365
         const val SUDOKU_CELL_COUNT = 36
         val SPELLING_TARGET_RANGE = 8..24
+        val CROSSWORD_ENTRY_RANGE = 6..14
 
         val DEFAULT_PROHIBITED_WORDS =
             setOf(

@@ -62,6 +62,17 @@ class MainActivityInstrumentedTest {
     }
 
     @Test
+    fun crosswordCardOpensPlayableGame() {
+        openHomeFromAnyLaunchState()
+
+        compose.onNodeWithText("Crossword").assertIsDisplayed().performClick()
+
+        compose.waitUntilAtLeastOneExists(hasTestTag("crosswordScreen"), 3_000L)
+        compose.onNodeWithTag("crosswordBoard").assertIsDisplayed()
+        compose.onNodeWithTag("crosswordKeyboard").assertIsDisplayed()
+    }
+
+    @Test
     fun achievementsTabOpensFromBottomNavigation() {
         openHomeFromAnyLaunchState()
 

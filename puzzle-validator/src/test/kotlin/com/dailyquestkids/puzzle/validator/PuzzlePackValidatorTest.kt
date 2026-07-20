@@ -1,6 +1,9 @@
 package com.dailyquestkids.puzzle.validator
 
 import com.dailyquestkids.core.model.ConnectionsPuzzle
+import com.dailyquestkids.core.model.CrosswordDirection
+import com.dailyquestkids.core.model.CrosswordEntry
+import com.dailyquestkids.core.model.CrosswordPuzzle
 import com.dailyquestkids.core.model.DailyPuzzleSet
 import com.dailyquestkids.core.model.Hint
 import com.dailyquestkids.core.model.PuzzlePack
@@ -196,5 +199,97 @@ class PuzzlePackValidatorTest {
         assertTrue(spellingPuzzles.all { it.review.humanReviewed })
         assertTrue(spellingPuzzles.map { it.letters.joinToString("") }.toSet().size >= 20)
         assertTrue(spellingPuzzles.all { it.targetWords.size in 8..24 })
+    }
+
+    @Test
+    fun phasePreviewIncludesAtLeastTwentyReviewedCrosswordFixtures() {
+        val crosswordPuzzles =
+            FixturePackFactory
+                .phasePreviewPack()
+                .days
+                .map { day -> day.puzzles.filterIsInstance<CrosswordPuzzle>().single() }
+
+        assertTrue(crosswordPuzzles.size >= 20)
+        assertTrue(crosswordPuzzles.all { it.review.humanReviewed })
+        assertTrue(crosswordPuzzles.map { it.entries.first().answer }.toSet().size >= 20)
+        assertTrue(crosswordPuzzles.all { it.width == 7 && it.height == 7 })
+        assertTrue(crosswordPuzzles.all { it.entries.size in 6..14 })
+    }
+
+    @Test
+    fun crosswordCrossingConflictsAreRejected() {
+        val original = FixturePackFactory.oneDayPack()
+        val day = original.days.single()
+        val crossword = day.puzzles.filterIsInstance<CrosswordPuzzle>().single()
+        val brokenCrossword =
+            crossword.copy(
+                entries =
+                    crossword.entries.mapIndexed { index, entry ->
+                        if (index == 1) {
+                            entry.copy(answer = "ant", clue = "A tiny insect that can live in a colony.")
+                        } else {
+                            entry
+                        }
+                    },
+            )
+        val broken =
+            original.copy(
+                days =
+                    listOf(
+                        day.copy(
+                            puzzles =
+                                day.puzzles.map { puzzle ->
+                                    if (puzzle.id == crossword.id) brokenCrossword else puzzle
+                                },
+                        ),
+                    ),
+            )
+
+        val report = validator.validate(broken)
+
+        assertFalse(report.passed)
+        assertTrue(report.errors.any { it.contains("crossing conflict") })
+    }
+
+    @Test
+    fun disconnectedCrosswordEntriesAreRejected() {
+        val original = FixturePackFactory.oneDayPack()
+        val day = original.days.single()
+        val crossword = day.puzzles.filterIsInstance<CrosswordPuzzle>().single()
+        val brokenCrossword =
+            crossword.copy(
+                entries =
+                    listOf(
+                        CrosswordEntry(
+                            answer = "flowers",
+                            clue = "Colourful parts of plants that may smell sweet.",
+                            row = 3,
+                            column = 0,
+                            direction = CrosswordDirection.ACROSS,
+                        ),
+                        CrosswordEntry("cat", "A small pet with whiskers.", 0, 0, CrosswordDirection.DOWN),
+                        CrosswordEntry("dog", "A friendly pet that may bark.", 0, 1, CrosswordDirection.DOWN),
+                        CrosswordEntry("hen", "A farm bird that can lay eggs.", 0, 2, CrosswordDirection.DOWN),
+                        CrosswordEntry("ink", "A liquid used for writing.", 0, 3, CrosswordDirection.DOWN),
+                        CrosswordEntry("log", "A piece of wood from a tree.", 0, 4, CrosswordDirection.DOWN),
+                    ),
+            )
+        val broken =
+            original.copy(
+                days =
+                    listOf(
+                        day.copy(
+                            puzzles =
+                                day.puzzles.map { puzzle ->
+                                    if (puzzle.id == crossword.id) brokenCrossword else puzzle
+                                },
+                        ),
+                    ),
+            )
+
+        val report = validator.validate(broken)
+
+        assertFalse(report.passed)
+        assertTrue(report.errors.any { it.contains("must connect") })
     }
 }

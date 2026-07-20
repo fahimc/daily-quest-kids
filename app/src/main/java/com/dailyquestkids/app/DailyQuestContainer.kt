@@ -17,4 +17,5 @@ class DailyQuestContainer(
     val progressStore = ProgressStore(applicationContext)
     val wordlyProgressStore = WordlyProgressStore(applicationContext)
     val spellingProgressStore = SpellingProgressStore(applicationContext)
+    val crosswordProgressStore = CrosswordProgressStore(applicationContext)
 }

@@ -37,6 +37,14 @@
   share leakage, one-to-six-attempt wins, failure resume and UI mapping.
 - Added instrumented Wordly screenshot-smoke/VRT coverage targets for empty,
   partial, repeated-letter, hint, success and failure states.
+- Completed the Crossword feature with grid parsing, numbering, crossing
+  agreement, clue navigation, keyboard entry, autosave, hints, completion and
+  share-safe result handling.
+- Expanded preview content to 20 human-reviewed 7x7 Crossword fixtures and
+  hardened validation for bounds, crossing conflicts, disconnected entries and
+  clue answer leakage.
+- Added Crossword engine, validator, UI mapper, responsive layout and
+  instrumented visual/play-through tests, including short-phone fit checks.
 
 ## Phase 0
 

@@ -45,26 +45,7 @@ object FixturePackFactory {
                 listOf(
                     wordlyPuzzle(dayIndex),
                     spellingPuzzle(dayIndex),
-                    CrosswordPuzzle(
-                        id = "crossword-${dayId(dayIndex)}",
-                        difficulty = Difficulty.STARTER,
-                        curriculumTags = listOf("english:clues", "science:plants"),
-                        hints =
-                            listOf(
-                                Hint(1, "Think about living things."),
-                                Hint(2, "A tree has one."),
-                                Hint(3, "The answer starts with l."),
-                            ),
-                        review = automatedOnlyReview(),
-                        width = 7,
-                        height = 7,
-                        entries =
-                            listOf(
-                                CrosswordEntry("leaf", "A flat green part of a plant", 0, 0, CrosswordDirection.ACROSS),
-                                CrosswordEntry("stem", "Part of a plant that holds it up", 1, 0, CrosswordDirection.ACROSS),
-                                CrosswordEntry("seed", "A tiny plant can grow from this", 2, 0, CrosswordDirection.ACROSS),
-                            ),
-                    ),
+                    crosswordPuzzle(dayIndex),
                     SudokuPuzzle(
                         id = "sudoku-${dayId(dayIndex)}",
                         difficulty = Difficulty.STARTER,
@@ -209,6 +190,20 @@ object FixturePackFactory {
         )
     }
 
+    private fun crosswordPuzzle(dayIndex: Int): CrosswordPuzzle {
+        val fixture = crosswordFixtures[dayIndex % crosswordFixtures.size]
+        return CrosswordPuzzle(
+            id = "crossword-${dayId(dayIndex)}",
+            difficulty = Difficulty.STARTER,
+            curriculumTags = listOf("english:clues", "english:vocabulary", "year:3"),
+            hints = crosswordHints(),
+            review = humanReview(),
+            width = CROSSWORD_SIZE,
+            height = CROSSWORD_SIZE,
+            entries = crosswordEntries(fixture),
+        )
+    }
+
     private fun automatedOnlyReview(): ReviewMetadata =
         ReviewMetadata(
             automatedReviewPassed = true,
@@ -234,6 +229,14 @@ object FixturePackFactory {
             Hint(2, "Show the length of one undiscovered word."),
             Hint(3, "Show a definition for one undiscovered word."),
             Hint(4, "Show the first letter of one undiscovered word."),
+        )
+
+    private fun crosswordHints(): List<Hint> =
+        listOf(
+            Hint(1, "Show a simpler clue for the selected answer."),
+            Hint(2, "Reveal one letter in the selected answer."),
+            Hint(3, "Check the selected answer."),
+            Hint(4, "Reveal the selected answer."),
         )
 
     private val wordlyFixtures =
@@ -503,6 +506,194 @@ object FixturePackFactory {
         val morphologyNote: String? = null,
         val difficulty: Difficulty = Difficulty.STARTER,
         val yearGroup: Int = 3,
+    )
+
+    private fun crosswordEntries(fixture: CrosswordFixture): List<CrosswordEntry> {
+        val usedStarts = mutableMapOf<Char, Int>()
+        val across =
+            CrosswordEntry(
+                answer = fixture.answer,
+                clue = fixture.clue,
+                row = CROSSWORD_MIDDLE,
+                column = 0,
+                direction = CrosswordDirection.ACROSS,
+            )
+        val down =
+            fixture.answer.mapIndexed { column, letter ->
+                val answer = nextCrosswordDownWord(letter, usedStarts)
+                CrosswordEntry(
+                    answer = answer,
+                    clue = crosswordClueFor(answer),
+                    row = CROSSWORD_MIDDLE,
+                    column = column,
+                    direction = CrosswordDirection.DOWN,
+                )
+            }
+        return listOf(across) + down
+    }
+
+    private fun nextCrosswordDownWord(
+        letter: Char,
+        usedStarts: MutableMap<Char, Int>,
+    ): String {
+        val key = letter.lowercaseChar()
+        val words = crosswordDownWords.getValue(key)
+        val index = usedStarts[key] ?: 0
+        usedStarts[key] = index + 1
+        return words[index % words.size]
+    }
+
+    private fun crosswordClueFor(answer: String): String =
+        crosswordClues[answer] ?: "A short answer beginning with ${answer.first().uppercaseChar()}."
+
+    private const val CROSSWORD_SIZE = 7
+    private const val CROSSWORD_MIDDLE = 3
+
+    private val crosswordFixtures =
+        listOf(
+            CrosswordFixture("flowers", "Colourful parts of plants that may smell sweet."),
+            CrosswordFixture("animals", "Living things such as cats, birds and fish."),
+            CrosswordFixture("morning", "The early part of the day."),
+            CrosswordFixture("picture", "An image made with a camera or pencil."),
+            CrosswordFixture("friends", "People you like and trust."),
+            CrosswordFixture("reading", "Understanding words on a page."),
+            CrosswordFixture("drawing", "A picture made with lines."),
+            CrosswordFixture("kitchen", "A room where meals are made."),
+            CrosswordFixture("outside", "Not indoors."),
+            CrosswordFixture("holiday", "A break from school or work."),
+            CrosswordFixture("blanket", "A warm cover for a bed."),
+            CrosswordFixture("monster", "A make-believe scary character."),
+            CrosswordFixture("travels", "Goes from one place to another."),
+            CrosswordFixture("teacher", "A person who helps a class learn."),
+            CrosswordFixture("rainbow", "A colourful arch in the sky after rain."),
+            CrosswordFixture("camping", "Sleeping outdoors in a tent."),
+            CrosswordFixture("weather", "Sun, rain, wind or snow conditions."),
+            CrosswordFixture("library", "A place to borrow books."),
+            CrosswordFixture("playful", "Full of fun and games."),
+            CrosswordFixture("gardens", "Places where plants grow."),
+        )
+
+    private val crosswordDownWords =
+        mapOf(
+            'a' to listOf("ant", "arm", "air", "able"),
+            'b' to listOf("bag", "bat", "bee", "blue"),
+            'c' to listOf("cat", "cap", "cow", "cake"),
+            'd' to listOf("dog", "day", "den", "door"),
+            'e' to listOf("ear", "eel", "egg", "east"),
+            'f' to listOf("fan", "fun", "fox", "frog"),
+            'g' to listOf("gap", "gem", "goat", "gold"),
+            'h' to listOf("hat", "hen", "hop", "hand"),
+            'i' to listOf("ice", "ink", "ivy", "into"),
+            'k' to listOf("key", "kit", "kid", "kite"),
+            'l' to listOf("log", "leg", "lap", "lion"),
+            'm' to listOf("map", "man", "mat", "moon"),
+            'n' to listOf("net", "nut", "nap", "nose"),
+            'o' to listOf("owl", "oil", "one", "open"),
+            'p' to listOf("pen", "pig", "pot", "pond"),
+            'r' to listOf("run", "red", "rat", "rain"),
+            's' to listOf("sun", "sit", "saw", "star"),
+            't' to listOf("top", "tap", "ten", "tree"),
+            'u' to listOf("use", "unit", "undo", "upon"),
+            'v' to listOf("van", "vet", "vine", "very"),
+            'w' to listOf("win", "web", "wet", "wind"),
+            'y' to listOf("yes", "yak", "yarn", "yard"),
+        )
+
+    private val crosswordClues =
+        mapOf(
+            "ant" to "A tiny insect that can live in a colony.",
+            "arm" to "A body part from shoulder to hand.",
+            "air" to "The invisible gas around us.",
+            "able" to "Having the skill or chance to do something.",
+            "bag" to "A container with handles.",
+            "bat" to "A stick used to hit a ball.",
+            "bee" to "A buzzing insect that visits flowers.",
+            "blue" to "The colour of a clear sky.",
+            "cat" to "A small pet with whiskers.",
+            "cap" to "A soft hat.",
+            "cow" to "A farm animal that gives milk.",
+            "cake" to "A sweet food for a celebration.",
+            "dog" to "A friendly pet that may bark.",
+            "day" to "The time between sunrise and night.",
+            "den" to "A cosy room or animal home.",
+            "door" to "You open this to enter a room.",
+            "ear" to "A body part used to listen.",
+            "eel" to "A long fish.",
+            "egg" to "A shell-covered food from a hen.",
+            "east" to "The direction where the sun rises.",
+            "fan" to "Something that moves air.",
+            "fun" to "Enjoyment or play.",
+            "fox" to "A wild animal with a bushy tail.",
+            "frog" to "A small jumping animal that may live near ponds.",
+            "gap" to "An empty space between things.",
+            "gem" to "A bright precious stone.",
+            "goat" to "A farm animal that can climb well.",
+            "gold" to "A shiny yellow metal.",
+            "hat" to "Something worn on the head.",
+            "hen" to "A female chicken.",
+            "hop" to "A small jump.",
+            "hand" to "A body part with fingers.",
+            "ice" to "Frozen water.",
+            "ink" to "Coloured liquid used for writing.",
+            "ivy" to "A climbing green plant.",
+            "into" to "Moving to the inside.",
+            "key" to "A tool that opens a lock.",
+            "kit" to "A set of things for a task.",
+            "kid" to "A child.",
+            "kite" to "A toy flown in the wind.",
+            "log" to "A piece of cut tree trunk.",
+            "leg" to "A body part used for standing.",
+            "lap" to "The top of your legs when sitting.",
+            "lion" to "A big wild cat with a mane.",
+            "map" to "A drawing that shows places.",
+            "man" to "A grown-up male person.",
+            "mat" to "A small rug or pad.",
+            "moon" to "The round object seen in the night sky.",
+            "net" to "String tied in holes to catch or hold things.",
+            "nut" to "A hard seed used as food.",
+            "nap" to "A short sleep.",
+            "nose" to "A body part for smelling.",
+            "owl" to "A night bird with big eyes.",
+            "oil" to "A slippery liquid.",
+            "one" to "The number before two.",
+            "open" to "Not closed.",
+            "pen" to "A tool for writing.",
+            "pig" to "A farm animal with a snout.",
+            "pot" to "A container for cooking or plants.",
+            "pond" to "A small area of water.",
+            "run" to "To move quickly on foot.",
+            "red" to "The colour of a strawberry.",
+            "rat" to "A small animal with a long tail.",
+            "rain" to "Water drops falling from clouds.",
+            "sun" to "The star that gives Earth light.",
+            "sit" to "To rest on a chair or the ground.",
+            "saw" to "A tool for cutting wood.",
+            "star" to "A bright object in the night sky.",
+            "top" to "The highest part.",
+            "tap" to "To touch lightly.",
+            "ten" to "The number after nine.",
+            "tree" to "A tall plant with a trunk.",
+            "use" to "To do something with a tool or object.",
+            "unit" to "One part of a set.",
+            "undo" to "To reverse an action.",
+            "upon" to "On or onto.",
+            "van" to "A vehicle bigger than a car.",
+            "vet" to "A doctor for animals.",
+            "vine" to "A plant with a long climbing stem.",
+            "very" to "A word that means a lot or extremely.",
+            "win" to "To come first in a game.",
+            "web" to "A spider can spin this.",
+            "wet" to "Covered with water.",
+            "wind" to "Moving air.",
+            "yes" to "A word for agreeing.",
+            "yak" to "A shaggy animal from cold mountains.",
+            "yarn" to "Thread used for knitting.",
+            "yard" to "An outdoor area near a building.",
+        )
+
+    private data class CrosswordFixture(
+        val answer: String,
+        val clue: String,
     )
 
     private val spellingFixtures =
