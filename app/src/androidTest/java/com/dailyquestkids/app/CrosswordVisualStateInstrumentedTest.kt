@@ -64,6 +64,9 @@ class CrosswordVisualStateInstrumentedTest {
     @Test
     fun completionStateRenders() {
         assertCrosswordStateRenders(completedState())
+
+        compose.onNodeWithTag("crosswordShareButton").assertIsDisplayed()
+        compose.onNodeWithTag("crosswordDoneButton").assertIsDisplayed()
     }
 
     @Test

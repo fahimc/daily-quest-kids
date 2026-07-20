@@ -766,25 +766,14 @@ private fun CrosswordCompletionPanel(
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy((4f * metrics.textScale).dp)) {
             Text("Crossword complete", color = Color(0xFF073B6D), fontWeight = FontWeight.Black, fontSize = (16f * metrics.textScale).sp)
             Text(state.sharePattern.orEmpty(), color = Color(0xFF173444), fontSize = (10f * metrics.textScale).sp, maxLines = 3)
-            PuzzleResultShareActions(
-                shareCard = state.shareCard,
-                shareActions = actions.shareActions,
-                tagPrefix = "crossword",
-                textScale = metrics.textScale,
-            )
         }
-        Button(
-            onClick = actions.onReturnHome,
-            modifier =
-                Modifier
-                    .width((88f * metrics.textScale).coerceAtLeast(70f).dp)
-                    .fillMaxHeight()
-                    .testTag("crosswordDoneButton"),
-            shape = RoundedCornerShape((16f * metrics.textScale).dp),
-            contentPadding = PaddingValues(horizontal = 4.dp),
-        ) {
-            Text("Done", fontWeight = FontWeight.Black, fontSize = (14f * metrics.textScale).sp)
-        }
+        PuzzleResultShareDoneRail(
+            shareCard = state.shareCard,
+            shareActions = actions.shareActions,
+            onDone = actions.onReturnHome,
+            tagPrefix = "crossword",
+            modifier = Modifier.width((88f * metrics.textScale).coerceAtLeast(70f).dp),
+        )
     }
 }
 

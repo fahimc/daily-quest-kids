@@ -74,6 +74,9 @@ class SpellingBVisualStateInstrumentedTest {
     @Test
     fun completionStateRenders() {
         assertSpellingStateRenders(completedState())
+
+        compose.onNodeWithTag("spellingShareButton").assertIsDisplayed()
+        compose.onNodeWithTag("spellingDoneButton").assertIsDisplayed()
     }
 
     @Test

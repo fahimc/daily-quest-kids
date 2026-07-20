@@ -1,8 +1,10 @@
 package com.dailyquestkids.app
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -63,6 +65,59 @@ internal fun PuzzleResultShareActions(
                 "Save",
                 fontWeight = FontWeight.Black,
                 fontSize = (12f * textScale).sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+internal fun PuzzleResultShareDoneRail(
+    shareCard: ShareCardModel?,
+    shareActions: ShareActions,
+    onDone: () -> Unit,
+    tagPrefix: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxHeight(),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        shareCard?.let { card ->
+            Button(
+                onClick = { shareActions.share(card) },
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .testTag("${tagPrefix}ShareButton"),
+                shape = RoundedCornerShape(18.dp),
+                contentPadding = PaddingValues(horizontal = 6.dp),
+            ) {
+                Text(
+                    "Share",
+                    fontWeight = FontWeight.Black,
+                    fontSize = 12.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        Button(
+            onClick = onDone,
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .testTag("${tagPrefix}DoneButton"),
+            shape = RoundedCornerShape(18.dp),
+            contentPadding = PaddingValues(horizontal = 6.dp),
+        ) {
+            Text(
+                "Done",
+                fontWeight = FontWeight.Black,
+                fontSize = 12.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

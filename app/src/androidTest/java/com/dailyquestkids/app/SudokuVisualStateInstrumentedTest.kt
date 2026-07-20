@@ -76,6 +76,9 @@ class SudokuVisualStateInstrumentedTest {
     @Test
     fun completionStateRenders() {
         assertSudokuStateRenders(completedState())
+
+        compose.onNodeWithTag("sudokuShareButton").assertIsDisplayed()
+        compose.onNodeWithTag("sudokuDoneButton").assertIsDisplayed()
     }
 
     @Test

@@ -803,17 +803,15 @@ private fun SpellingFoundPanel(
                             contentAlignment = Alignment.TopStart,
                         ),
                 )
-                if (state.isCompleted) {
-                    PuzzleResultShareActions(
-                        shareCard = state.shareCard,
-                        shareActions = actions.shareActions,
-                        tagPrefix = "spelling",
-                        textScale = metrics.textScale,
-                    )
-                }
             }
             if (state.isCompleted) {
-                SpellingDoneButton(metrics = metrics, onReturnHome = actions.onReturnHome)
+                PuzzleResultShareDoneRail(
+                    shareCard = state.shareCard,
+                    shareActions = actions.shareActions,
+                    onDone = actions.onReturnHome,
+                    tagPrefix = "spelling",
+                    modifier = Modifier.width((104f * metrics.textScale).coerceAtLeast(82f).dp),
+                )
             } else {
                 SpellingHintButton(state = state, metrics = metrics, onUseHint = actions.onUseHint)
             }

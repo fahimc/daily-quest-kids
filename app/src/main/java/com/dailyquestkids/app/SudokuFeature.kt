@@ -696,25 +696,14 @@ private fun SudokuHintPanel(
                         fontSize = (10f * metrics.textScale).sp,
                         maxLines = 3,
                     )
-                    PuzzleResultShareActions(
-                        shareCard = state.shareCard,
-                        shareActions = actions.shareActions,
-                        tagPrefix = "sudoku",
-                        textScale = metrics.textScale,
-                    )
                 }
-                Button(
-                    onClick = actions.onReturnHome,
-                    modifier =
-                        Modifier
-                            .width((88f * metrics.textScale).coerceAtLeast(70f).dp)
-                            .fillMaxHeight()
-                            .testTag("sudokuDoneButton"),
-                    shape = RoundedCornerShape((16f * metrics.textScale).dp),
-                    contentPadding = PaddingValues(horizontal = 4.dp),
-                ) {
-                    Text("Done", fontWeight = FontWeight.Black, fontSize = (14f * metrics.textScale).sp)
-                }
+                PuzzleResultShareDoneRail(
+                    shareCard = state.shareCard,
+                    shareActions = actions.shareActions,
+                    onDone = actions.onReturnHome,
+                    tagPrefix = "sudoku",
+                    modifier = Modifier.width((88f * metrics.textScale).coerceAtLeast(70f).dp),
+                )
             }
         } else {
             Row(

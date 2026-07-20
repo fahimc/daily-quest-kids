@@ -95,6 +95,7 @@ class ConnectionsVisualStateInstrumentedTest {
         setConnectionsContent(completedState())
 
         compose.onNodeWithTag("connectionsScreen").assertIsDisplayed()
+        compose.onNodeWithTag("connectionsShareButton").assertIsDisplayed()
         compose.onNodeWithTag("connectionsDoneButton").assertIsDisplayed()
         compose.onNodeWithText("Connections complete").assertIsDisplayed()
     }

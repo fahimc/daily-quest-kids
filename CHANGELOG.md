@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed completed Spelling B, Crossword, Sudoku and Connections screens so
+  Share is always visible in the same right-side action rail as Wordly.
 - Expanded individual puzzle sharing so native shares include spoiler-safe
   result details and the share image renders Wordly-style colour rows without
   exposing answers, guesses, clues or groups.

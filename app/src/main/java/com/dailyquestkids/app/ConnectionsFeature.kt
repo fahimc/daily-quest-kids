@@ -628,16 +628,16 @@ private fun ConnectionsHintPanel(
                     lineHeight = (14f * metrics.textScale).sp,
                     maxLines = 3,
                 )
-                if (state.isCompleted) {
-                    PuzzleResultShareActions(
-                        shareCard = state.shareCard,
-                        shareActions = actions.shareActions,
-                        tagPrefix = "connections",
-                        textScale = metrics.textScale,
-                    )
-                }
             }
-            if (state.isCompleted || state.isFailed) {
+            if (state.isCompleted) {
+                PuzzleResultShareDoneRail(
+                    shareCard = state.shareCard,
+                    shareActions = actions.shareActions,
+                    onDone = actions.onReturnHome,
+                    tagPrefix = "connections",
+                    modifier = Modifier.width((92f * metrics.textScale).coerceAtLeast(74f).dp),
+                )
+            } else if (state.isFailed) {
                 ConnectionsButton(
                     label = "Done",
                     metrics = metrics,
