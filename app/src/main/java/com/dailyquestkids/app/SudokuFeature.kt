@@ -282,7 +282,9 @@ internal object SudokuLayoutCalculator {
                     hintPanelHeight -
                     sectionGap * 5f
             }
-        val rawBoardSize = minOf(contentWidth * if (tablet) 0.52f else 0.94f, boardBudget, 430f).coerceAtLeast(0f)
+        val boardWidthLimit = if (tablet) contentWidth * 0.52f else contentWidth
+        val maxBoardSize = if (tablet) 430f else contentWidth
+        val rawBoardSize = minOf(boardWidthLimit, boardBudget, maxBoardSize).coerceAtLeast(0f)
         val boardSize = if (tablet) rawBoardSize.coerceAtLeast(232f) else rawBoardSize
         val cellSize = boardSize / 6f
         val textScale = (cellSize / 52f).coerceIn(0.62f, 1.08f)

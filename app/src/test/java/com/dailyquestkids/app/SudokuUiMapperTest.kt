@@ -132,6 +132,12 @@ class SudokuUiMapperTest {
             assertTrue("$width x $height content should fit width", metrics.contentWidth <= width)
             assertTrue("$width x $height cell should stay readable", metrics.cellSize >= 25f)
             assertTrue("$width x $height number buttons should be tappable", metrics.numberHeight >= 36f)
+            if (height >= 640f) {
+                assertTrue(
+                    "$width x $height board should align to the game rail",
+                    metrics.contentWidth - metrics.boardSize <= 0.01f,
+                )
+            }
         }
     }
 

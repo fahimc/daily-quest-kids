@@ -332,7 +332,9 @@ internal object CrosswordLayoutCalculator {
                     keyboardHeight -
                     sectionGap * 4f
             }
-        val rawBoardSize = minOf(contentWidth * if (tablet) 0.54f else 0.94f, boardBudget, 420f).coerceAtLeast(0f)
+        val boardWidthLimit = if (tablet) contentWidth * 0.54f else contentWidth
+        val maxBoardSize = if (tablet) 420f else contentWidth
+        val rawBoardSize = minOf(boardWidthLimit, boardBudget, maxBoardSize).coerceAtLeast(0f)
         val boardSize = if (tablet) rawBoardSize.coerceAtLeast(196f) else rawBoardSize
         val cellSize = boardSize / 7f
         val textScale = (cellSize / 48f).coerceIn(0.62f, 1.08f)

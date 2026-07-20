@@ -53,6 +53,9 @@
   rules.
 - Added Sudoku engine, validator, UI mapper and instrumented visual/play-through
   tests for initial, selected, notes, conflict, hint and completion states.
+- Aligned Sudoku and Crossword phone layouts so the square game boards fill the
+  same horizontal rail as the status, controls, keyboard and hint/clue panels
+  whenever the viewport height allows it without scrolling.
 
 ## Phase 0
 

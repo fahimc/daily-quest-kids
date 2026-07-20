@@ -133,6 +133,12 @@ class CrosswordUiMapperTest {
             assertTrue("$width x $height key should stay tappable", metrics.keyHeight >= 34f)
             assertTrue("$width x $height expanded list should grow", metrics.expandedPanelHeight > metrics.cluePanelHeight)
             assertTrue("$width x $height expanded list should fit screen", metrics.expandedPanelHeight <= height)
+            if (height >= 640f) {
+                assertTrue(
+                    "$width x $height board should align to the game rail",
+                    metrics.contentWidth - metrics.boardSize <= 0.01f,
+                )
+            }
         }
     }
 
