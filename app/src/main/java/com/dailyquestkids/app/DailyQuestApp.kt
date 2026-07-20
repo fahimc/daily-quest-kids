@@ -62,6 +62,7 @@ import androidx.navigation.compose.rememberNavController
 import com.dailyquestkids.core.common.SeasonDayState
 import com.dailyquestkids.core.design.DailyQuestTheme
 import com.dailyquestkids.core.design.categoryStyle
+import com.dailyquestkids.core.model.ConnectionsPuzzle
 import com.dailyquestkids.core.model.CrosswordPuzzle
 import com.dailyquestkids.core.model.Puzzle
 import com.dailyquestkids.core.model.PuzzleCategory
@@ -279,6 +280,29 @@ private fun MainQuestScaffold(
                                 SudokuRouteDependencies(
                                     progressStore = container.progressStore,
                                     sudokuProgressStore = container.sudokuProgressStore,
+                                    dayIndex = homeState.globalDayNumber - 1,
+                                    todaysPuzzleIds = coordinator.currentPuzzleIds(),
+                                ),
+                            onBack = { navController.popBackStack() },
+                            onReturnHome = {
+                                navController.navigate(Route.Home.path) {
+                                    popUpTo(Route.Home.path) { inclusive = true }
+                                }
+                            },
+                        )
+                    }
+                    is ConnectionsPuzzle -> {
+                        ConnectionsRoute(
+                            data =
+                                ConnectionsRouteData(
+                                    puzzle = puzzle,
+                                    settings = settings,
+                                    homeState = homeState,
+                                ),
+                            dependencies =
+                                ConnectionsRouteDependencies(
+                                    progressStore = container.progressStore,
+                                    connectionsProgressStore = container.connectionsProgressStore,
                                     dayIndex = homeState.globalDayNumber - 1,
                                     todaysPuzzleIds = coordinator.currentPuzzleIds(),
                                 ),
@@ -1483,8 +1507,7 @@ private fun HowToPlayScreen(onBack: () -> Unit) {
         QuestPanel {
             Text("Today", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(
-                "Wordly, Spelling B, Crossword and Sudoku are fully playable. " +
-                    "The other daily lands show previews while their full engines are being built.",
+                "Wordly, Spelling B, Crossword, Sudoku and Connections are fully playable.",
             )
         }
         Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) {

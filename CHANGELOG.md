@@ -56,6 +56,15 @@
 - Aligned Sudoku and Crossword phone layouts so the square game boards fill the
   same horizontal rail as the status, controls, keyboard and hint/clue panels
   whenever the viewport height allows it without scrolling.
+- Completed the Connections feature with a reusable engine, responsive Compose
+  screen, 4x4 group selection, shuffle, deselect, mistake limits, progressive
+  hints, autosave, completion/failure handling and share-safe result cards.
+- Expanded preview content to 20 human-reviewed Connections fixtures and
+  hardened validation for duplicate words, duplicate titles, missing hints and
+  ambiguous group titles.
+- Added Connections engine, validator, UI mapper and instrumented visual/play
+  tests covering initial, selected, solved, hinted, failed, completed and
+  interactive play states.
 
 ## Phase 0
 

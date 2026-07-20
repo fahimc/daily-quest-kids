@@ -47,25 +47,7 @@ object FixturePackFactory {
                     spellingPuzzle(dayIndex),
                     crosswordPuzzle(dayIndex),
                     sudokuPuzzle(dayIndex),
-                    ConnectionsPuzzle(
-                        id = "connections-${dayId(dayIndex)}",
-                        difficulty = Difficulty.STARTER,
-                        curriculumTags = listOf("english:vocabulary", "reasoning:classification"),
-                        hints =
-                            listOf(
-                                Hint(1, "One group is about things in the sky."),
-                                Hint(2, "moon and star belong together."),
-                                Hint(3, "A group title is Sky objects."),
-                            ),
-                        review = automatedOnlyReview(),
-                        groups =
-                            listOf(
-                                ConnectionGroup("Sky objects", listOf("moon", "star", "cloud", "sun"), "Things you can see in the sky."),
-                                ConnectionGroup("School items", listOf("desk", "book", "pencil", "ruler"), "Useful things in a classroom."),
-                                ConnectionGroup("Garden life", listOf("leaf", "seed", "flower", "grass"), "Things that grow outside."),
-                                ConnectionGroup("Movement", listOf("jump", "skip", "walk", "climb"), "Ways people can move."),
-                            ),
-                    ),
+                    connectionsPuzzle(dayIndex),
                 ),
         )
 
@@ -128,12 +110,17 @@ object FixturePackFactory {
         )
     }
 
-    private fun automatedOnlyReview(): ReviewMetadata =
-        ReviewMetadata(
-            automatedReviewPassed = true,
-            humanReviewed = false,
-            notes = "Automated fixture review only. Human review is required before production release.",
+    private fun connectionsPuzzle(dayIndex: Int): ConnectionsPuzzle {
+        val fixture = connectionsFixtures[dayIndex % connectionsFixtures.size]
+        return ConnectionsPuzzle(
+            id = "connections-${dayId(dayIndex)}",
+            difficulty = Difficulty.STARTER,
+            curriculumTags = listOf("english:vocabulary", "reasoning:classification", "year:3"),
+            hints = connectionsHints(),
+            review = humanReview(),
+            groups = fixture.groups,
         )
+    }
 
     private fun humanReview(): ReviewMetadata =
         ReviewMetadata(
@@ -169,6 +156,14 @@ object FixturePackFactory {
             Hint(2, "Explain which numbers cannot fit there."),
             Hint(3, "Highlight a cell with only one choice."),
             Hint(4, "Place one helpful number."),
+        )
+
+    private fun connectionsHints(): List<Hint> =
+        listOf(
+            Hint(1, "Broadly describe one hidden group."),
+            Hint(2, "Select two words from the same hidden group."),
+            Hint(3, "Reveal one hidden group title."),
+            Hint(4, "Reveal one full group after confirmation."),
         )
 
     private val wordlyFixtures =
@@ -677,6 +672,142 @@ object FixturePackFactory {
     private const val SUDOKU_SIZE = 6
     private const val SUDOKU_REGION_ROWS = 2
     private const val SUDOKU_REGION_COLUMNS = 3
+
+    private val connectionsFixtures =
+        listOf(
+            connectionsFixture(
+                cg("Sky things", "Things you can see above you.", "moon", "star", "cloud", "sun"),
+                cg("School tools", "Useful things in a classroom.", "desk", "book", "pencil", "ruler"),
+                cg("Garden life", "Things that grow outside.", "leaf", "seed", "flower", "grass"),
+                cg("Ways to move", "Actions people can use to travel.", "jump", "skip", "walk", "climb"),
+            ),
+            connectionsFixture(
+                cg("Fruit", "Sweet foods that grow on plants.", "apple", "pear", "plum", "grape"),
+                cg("Weather", "Things you may notice outside.", "rain", "wind", "snow", "storm"),
+                cg("Art supplies", "Tools for making pictures.", "paint", "brush", "paper", "crayon"),
+                cg("Animal homes", "Places where animals may live.", "nest", "den", "hive", "burrow"),
+            ),
+            connectionsFixture(
+                cg("Ocean animals", "Animals that live in the sea.", "whale", "shark", "crab", "seal"),
+                cg("Music words", "Things used to make or read music.", "song", "drum", "flute", "note"),
+                cg("Kitchen tools", "Items used when preparing food.", "spoon", "plate", "bowl", "fork"),
+                cg("Fast things", "Things known for moving quickly.", "rocket", "train", "cheetah", "jet"),
+            ),
+            connectionsFixture(
+                cg("Camping kit", "Things used on a camping trip.", "tent", "torch", "map", "rope"),
+                cg("Feelings", "Words for how someone may feel.", "happy", "calm", "proud", "brave"),
+                cg("Shapes", "Names of common shapes.", "circle", "square", "oval", "cube"),
+                cg("Birds", "Animals with feathers.", "swan", "robin", "eagle", "owl"),
+            ),
+            connectionsFixture(
+                cg("Transport", "Ways people can travel.", "bus", "bike", "ship", "taxi"),
+                cg("Book parts", "Parts of a book.", "cover", "page", "chapter", "title"),
+                cg("Tree parts", "Parts of a tree or plant.", "root", "trunk", "branch", "bark"),
+                cg("Sports gear", "Things used in games and sport.", "ball", "bat", "goal", "net"),
+            ),
+            connectionsFixture(
+                cg("Breakfast foods", "Foods people may eat in the morning.", "toast", "cereal", "egg", "porridge"),
+                cg("Light sources", "Things that can shine.", "lamp", "candle", "torch", "lantern"),
+                cg("Clothing", "Things people wear.", "coat", "scarf", "sock", "shirt"),
+                cg("Maths words", "Words used when working with numbers.", "plus", "minus", "equal", "sum"),
+            ),
+            connectionsFixture(
+                cg("Baby animals", "Names for young animals.", "cub", "calf", "chick", "foal"),
+                cg("Building parts", "Parts of a building.", "wall", "roof", "door", "window"),
+                cg("Water places", "Places where water can be found.", "river", "lake", "pond", "stream"),
+                cg("Quiet actions", "Actions that can be done softly.", "whisper", "tiptoe", "listen", "read"),
+            ),
+            connectionsFixture(
+                cg("Time words", "Words that describe when things happen.", "today", "later", "soon", "before"),
+                cg("Board games", "Games played on a table or board.", "chess", "draughts", "ludo", "scrabble"),
+                cg("Green things", "Things often coloured green.", "frog", "lime", "pea", "moss"),
+                cg("Jobs", "People who do different kinds of work.", "doctor", "teacher", "farmer", "baker"),
+            ),
+            connectionsFixture(
+                cg("Park items", "Things you may find at a park.", "slide", "swing", "bench", "path"),
+                cg("Measurement", "Tools or words for measuring.", "metre", "scale", "timer", "ruler"),
+                cg("Pets", "Animals people may care for at home.", "cat", "dog", "rabbit", "hamster"),
+                cg("Cooking actions", "Actions used when making food.", "mix", "stir", "bake", "chop"),
+            ),
+            connectionsFixture(
+                cg("Space words", "Things linked with outer space.", "planet", "comet", "orbit", "galaxy"),
+                cg("Beach things", "Things you may see at the seaside.", "sand", "shell", "wave", "bucket"),
+                cg("Opposites", "Words with contrasting meanings.", "hot", "cold", "big", "small"),
+                cg("Insects", "Small animals with six legs.", "ant", "bee", "beetle", "moth"),
+            ),
+            connectionsFixture(
+                cg("Library words", "Things linked with reading books.", "shelf", "story", "author", "library"),
+                cg("Rainforest animals", "Animals from warm forests.", "monkey", "parrot", "jaguar", "toucan"),
+                cg("Materials", "Things objects can be made from.", "wood", "metal", "glass", "cloth"),
+                cg("Polite words", "Kind words used with other people.", "please", "thanks", "sorry", "hello"),
+            ),
+            connectionsFixture(
+                cg("Farm animals", "Animals often found on farms.", "cow", "pig", "sheep", "goat"),
+                cg("Tools", "Items used to build or fix things.", "hammer", "saw", "spade", "wrench"),
+                cg("Colours", "Colour names.", "red", "blue", "yellow", "purple"),
+                cg("Story settings", "Places where a story may happen.", "castle", "forest", "island", "village"),
+            ),
+            connectionsFixture(
+                cg("Body parts", "Parts of the human body.", "hand", "foot", "knee", "elbow"),
+                cg("Computer words", "Things used with digital devices.", "mouse", "screen", "keyboard", "tablet"),
+                cg("Drinks", "Things people can drink.", "water", "juice", "milk", "tea"),
+                cg("Sound words", "Words for noises.", "bang", "buzz", "hum", "ring"),
+            ),
+            connectionsFixture(
+                cg("Winter things", "Things linked with cold weather.", "ice", "frost", "sledge", "glove"),
+                cg("Garden tools", "Tools used outside in a garden.", "rake", "hoe", "trowel", "hose"),
+                cg("Exercise", "Activities that make bodies move.", "run", "swim", "dance", "stretch"),
+                cg("Containers", "Things that hold other things.", "box", "jar", "bag", "basket"),
+            ),
+            connectionsFixture(
+                cg("Celebrations", "Things linked with parties.", "cake", "card", "music", "balloon"),
+                cg("Map words", "Words used when reading maps.", "north", "south", "east", "west"),
+                cg("Desert things", "Things linked with dry sandy places.", "sand", "cactus", "camel", "dune"),
+                cg("Verbs ending in ing", "Action words in the -ing form.", "reading", "singing", "jumping", "cooking"),
+            ),
+            connectionsFixture(
+                cg("Tiny things", "Small things you can hold or see.", "pin", "seed", "bead", "coin"),
+                cg("Royal words", "Words linked with kings and queens.", "crown", "queen", "king", "palace"),
+                cg("Road words", "Things found on or near roads.", "lane", "traffic", "bridge", "sign"),
+                cg("Sweet treats", "Sweet foods eaten as a treat.", "honey", "jam", "fudge", "biscuit"),
+            ),
+            connectionsFixture(
+                cg("Science tools", "Tools used for investigating.", "magnet", "lens", "beaker", "filter"),
+                cg("Reptiles", "Scaly animals.", "snake", "lizard", "turtle", "gecko"),
+                cg("House rooms", "Rooms inside a home.", "kitchen", "bedroom", "bathroom", "hall"),
+                cg("Writing words", "Things linked with writing.", "letter", "sentence", "comma", "pencil"),
+            ),
+            connectionsFixture(
+                cg("Mountain words", "Things linked with mountains.", "peak", "cliff", "valley", "summit"),
+                cg("Team roles", "People in a team or activity.", "captain", "coach", "player", "helper"),
+                cg("Round things", "Objects that are round or circular.", "wheel", "coin", "plate", "button"),
+                cg("Cleaning items", "Things used to clean.", "soap", "brush", "mop", "sponge"),
+            ),
+            connectionsFixture(
+                cg("Nocturnal animals", "Animals often active at night.", "bat", "owl", "fox", "moth"),
+                cg("Classroom actions", "Things pupils do in class.", "learn", "write", "count", "share"),
+                cg("Hot things", "Things that can feel hot.", "fire", "sun", "oven", "kettle"),
+                cg("Pairs", "Things that usually come in pairs.", "shoes", "socks", "gloves", "earrings"),
+            ),
+            connectionsFixture(
+                cg("Adventure words", "Words linked with exploring.", "quest", "map", "trail", "camp"),
+                cg("Bakery foods", "Foods made in a bakery.", "bread", "bun", "muffin", "pastry"),
+                cg("Things with keys", "Things that use keys.", "piano", "lock", "keyboard", "car"),
+                cg("Helpful traits", "Good qualities people can show.", "kind", "fair", "patient", "honest"),
+            ),
+        )
+
+    private fun connectionsFixture(vararg groups: ConnectionGroup): ConnectionsFixture = ConnectionsFixture(groups.toList())
+
+    private fun cg(
+        title: String,
+        explanation: String,
+        vararg words: String,
+    ): ConnectionGroup = ConnectionGroup(title, words.toList(), explanation)
+
+    private data class ConnectionsFixture(
+        val groups: List<ConnectionGroup>,
+    )
 
     private val spellingFixtures =
         listOf(

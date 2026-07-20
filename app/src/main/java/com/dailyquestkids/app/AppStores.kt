@@ -10,6 +10,8 @@ import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.dailyquestkids.core.common.StreakEngine
 import com.dailyquestkids.core.model.DailyFiveProgress
+import com.dailyquestkids.puzzle.engine.ConnectionsGameEngine
+import com.dailyquestkids.puzzle.engine.ConnectionsSaveState
 import com.dailyquestkids.puzzle.engine.CrosswordGameEngine
 import com.dailyquestkids.puzzle.engine.CrosswordSaveState
 import com.dailyquestkids.puzzle.engine.SpellingBGameEngine
@@ -186,6 +188,14 @@ class ProgressStore(
                     @Suppress("UNCHECKED_CAST")
                     preferences.remove(key as Preferences.Key<String>)
                 }
+            preferences
+                .asMap()
+                .keys
+                .filter { it.name.startsWith(Keys.CONNECTIONS_STATE_PREFIX) }
+                .forEach { key ->
+                    @Suppress("UNCHECKED_CAST")
+                    preferences.remove(key as Preferences.Key<String>)
+                }
         }
     }
 
@@ -297,6 +307,29 @@ class SudokuProgressStore(
     }
 }
 
+class ConnectionsProgressStore(
+    private val context: Context,
+) {
+    fun stateFor(puzzleId: String): Flow<ConnectionsSaveState?> =
+        context.questDataStore.data.map { preferences ->
+            preferences[Keys.connectionsState(puzzleId)]?.let { payload ->
+                runCatching { ConnectionsGameEngine.decode(payload) }.getOrNull()
+            }
+        }
+
+    suspend fun save(state: ConnectionsSaveState) {
+        context.questDataStore.edit { preferences ->
+            preferences[Keys.connectionsState(state.puzzleId)] = ConnectionsGameEngine.encode(state)
+        }
+    }
+
+    suspend fun clear(puzzleId: String) {
+        context.questDataStore.edit { preferences ->
+            preferences.remove(Keys.connectionsState(puzzleId))
+        }
+    }
+}
+
 private object Keys {
     val ONBOARDING_COMPLETE = booleanPreferencesKey("onboarding_complete")
     val SOUND = booleanPreferencesKey("sound_enabled")
@@ -315,6 +348,7 @@ private object Keys {
     const val SPELLING_STATE_PREFIX = "spelling_state_"
     const val CROSSWORD_STATE_PREFIX = "crossword_state_"
     const val SUDOKU_STATE_PREFIX = "sudoku_state_"
+    const val CONNECTIONS_STATE_PREFIX = "connections_state_"
 
     fun wordlyState(puzzleId: String): Preferences.Key<String> = stringPreferencesKey("$WORDLY_STATE_PREFIX$puzzleId")
 
@@ -323,4 +357,6 @@ private object Keys {
     fun crosswordState(puzzleId: String): Preferences.Key<String> = stringPreferencesKey("$CROSSWORD_STATE_PREFIX$puzzleId")
 
     fun sudokuState(puzzleId: String): Preferences.Key<String> = stringPreferencesKey("$SUDOKU_STATE_PREFIX$puzzleId")
+
+    fun connectionsState(puzzleId: String): Preferences.Key<String> = stringPreferencesKey("$CONNECTIONS_STATE_PREFIX$puzzleId")
 }

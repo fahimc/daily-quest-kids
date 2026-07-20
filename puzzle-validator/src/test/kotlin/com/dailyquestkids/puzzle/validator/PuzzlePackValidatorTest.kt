@@ -7,6 +7,7 @@ import com.dailyquestkids.core.model.CrosswordPuzzle
 import com.dailyquestkids.core.model.DailyPuzzleSet
 import com.dailyquestkids.core.model.Hint
 import com.dailyquestkids.core.model.PuzzlePack
+import com.dailyquestkids.core.model.ReviewMetadata
 import com.dailyquestkids.core.model.SpellingBeePuzzle
 import com.dailyquestkids.core.model.SudokuPuzzle
 import com.dailyquestkids.core.model.WordlyPuzzle
@@ -169,7 +170,22 @@ class PuzzlePackValidatorTest {
 
     @Test
     fun productionModeRequiresHumanReview() {
-        val report = validator.validate(FixturePackFactory.oneDayPack(), requireFullSeason = true)
+        val original = FixturePackFactory.oneDayPack()
+        val wordly =
+            original.days
+                .single()
+                .puzzles
+                .filterIsInstance<WordlyPuzzle>()
+                .single()
+        val unreviewed =
+            wordly.copy(
+                review =
+                    ReviewMetadata(
+                        automatedReviewPassed = true,
+                        humanReviewed = false,
+                    ),
+            )
+        val report = validator.validate(replacePuzzle(original, wordly.id, unreviewed), requireFullSeason = true)
 
         assertFalse(report.passed)
         assertTrue(report.errors.any { it.contains("requires human review") })
@@ -229,6 +245,120 @@ class PuzzlePackValidatorTest {
         assertTrue(sudokuPuzzles.all { it.review.humanReviewed })
         assertTrue(sudokuPuzzles.map { it.solution.joinToString("") }.toSet().size >= 20)
         assertTrue(sudokuPuzzles.all { puzzle -> puzzle.givens.count { it == 0 } == 6 })
+    }
+
+    @Test
+    fun phasePreviewIncludesAtLeastTwentyReviewedConnectionsFixtures() {
+        val connectionsPuzzles =
+            FixturePackFactory
+                .phasePreviewPack()
+                .days
+                .map { day -> day.puzzles.filterIsInstance<ConnectionsPuzzle>().single() }
+
+        assertTrue(connectionsPuzzles.size >= 20)
+        assertTrue(connectionsPuzzles.all { it.review.humanReviewed })
+        assertTrue(connectionsPuzzles.map { it.groups.first().title }.toSet().size >= 20)
+        assertTrue(connectionsPuzzles.all { it.groups.size == 4 })
+        assertTrue(
+            connectionsPuzzles.all { puzzle ->
+                puzzle.groups
+                    .flatMap { it.words }
+                    .toSet()
+                    .size == 16
+            },
+        )
+    }
+
+    @Test
+    fun connectionsDuplicateVisibleWordsAreRejected() {
+        val original = FixturePackFactory.oneDayPack()
+        val connections =
+            original.days
+                .single()
+                .puzzles
+                .filterIsInstance<ConnectionsPuzzle>()
+                .single()
+        val broken =
+            connections.copy(
+                groups =
+                    connections.groups.mapIndexed { index, group ->
+                        if (index == 1) {
+                            group.copy(
+                                words =
+                                    group.words.dropLast(1) +
+                                        connections.groups
+                                            .first()
+                                            .words
+                                            .first(),
+                            )
+                        } else {
+                            group
+                        }
+                    },
+            )
+        val report = validator.validate(replacePuzzle(original, connections.id, broken))
+
+        assertFalse(report.passed)
+        assertTrue(report.errors.any { it.contains("sixteen unique visible words") })
+    }
+
+    @Test
+    fun connectionsDuplicateTitlesAreRejected() {
+        val original = FixturePackFactory.oneDayPack()
+        val connections =
+            original.days
+                .single()
+                .puzzles
+                .filterIsInstance<ConnectionsPuzzle>()
+                .single()
+        val broken =
+            connections.copy(
+                groups =
+                    connections.groups.mapIndexed { index, group ->
+                        if (index == 1) group.copy(title = connections.groups.first().title) else group
+                    },
+            )
+        val report = validator.validate(replacePuzzle(original, connections.id, broken))
+
+        assertFalse(report.passed)
+        assertTrue(report.errors.any { it.contains("titles must be unique") })
+    }
+
+    @Test
+    fun connectionsNeedFourHints() {
+        val original = FixturePackFactory.oneDayPack()
+        val connections =
+            original.days
+                .single()
+                .puzzles
+                .filterIsInstance<ConnectionsPuzzle>()
+                .single()
+        val report = validator.validate(replacePuzzle(original, connections.id, connections.copy(hints = connections.hints.take(3))))
+
+        assertFalse(report.passed)
+        assertTrue(report.errors.any { it.contains("four progressive connections hints") })
+    }
+
+    @Test
+    fun connectionsAmbiguousTitlesAreRejected() {
+        val original = FixturePackFactory.oneDayPack()
+        val connections =
+            original.days
+                .single()
+                .puzzles
+                .filterIsInstance<ConnectionsPuzzle>()
+                .single()
+        val broken =
+            connections.copy(
+                groups =
+                    connections.groups.mapIndexed { index, group ->
+                        if (index == 1) group.copy(title = "Sky words") else group
+                    },
+            )
+        val report = validator.validate(replacePuzzle(original, connections.id, broken))
+
+        assertFalse(report.passed)
+        assertTrue(report.errors.any { it.contains("lexically ambiguous") })
     }
 
     @Test

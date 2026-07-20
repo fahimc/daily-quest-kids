@@ -84,6 +84,17 @@ class MainActivityInstrumentedTest {
     }
 
     @Test
+    fun connectionsCardOpensPlayableGame() {
+        openHomeFromAnyLaunchState()
+
+        compose.onNodeWithText("Connections").assertIsDisplayed().performClick()
+
+        compose.waitUntilAtLeastOneExists(hasTestTag("connectionsScreen"), 3_000L)
+        compose.onNodeWithTag("connectionsTileGrid").assertIsDisplayed()
+        compose.onNodeWithTag("connectionsHintPanel").assertIsDisplayed()
+    }
+
+    @Test
     fun achievementsTabOpensFromBottomNavigation() {
         openHomeFromAnyLaunchState()
 

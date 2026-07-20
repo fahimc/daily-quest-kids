@@ -190,11 +190,23 @@ class PuzzlePackValidator(
     ) {
         if (puzzle.groups.size != 4) errors += "${puzzle.id} must have four groups"
         puzzle.groups.forEach { group -> validateConnectionGroup(puzzle.id, group, errors) }
-        val visibleWords = puzzle.groups.flatMap { it.words }
+        val visibleWords = puzzle.groups.flatMap { it.words.map(::normaliseConnectionWord) }
         if (visibleWords.size != 16 || visibleWords.toSet().size != 16) {
             errors += "${puzzle.id} must have sixteen unique visible words"
         }
-        checkSafeWords(puzzle.id, visibleWords, errors)
+        val uniqueTitleCount =
+            puzzle.groups
+                .map { it.title.lowercase() }
+                .toSet()
+                .size
+        if (uniqueTitleCount != puzzle.groups.size) {
+            errors += "${puzzle.id} connection group titles must be unique"
+        }
+        if (puzzle.hints.size < 4) errors += "${puzzle.id} must provide four progressive connections hints"
+        if (hasAmbiguousConnectionTitles(puzzle.groups)) {
+            errors += "${puzzle.id} connection group titles are lexically ambiguous"
+        }
+        checkSafeWords(puzzle.id, puzzle.groups.flatMap { it.words }, errors)
     }
 
     private fun validateConnectionGroup(
@@ -205,7 +217,32 @@ class PuzzlePackValidator(
         if (group.title.isBlank()) errors += "$id connection group title is required"
         if (group.words.size != 4) errors += "$id connection group must contain four words"
         if (group.explanation.isBlank()) errors += "$id connection group explanation is required"
+        if (group.words.any { it.isBlank() }) errors += "$id connection group words must not be blank"
+        val uniqueWordCount =
+            group.words
+                .map(::normaliseConnectionWord)
+                .toSet()
+                .size
+        if (uniqueWordCount != group.words.size) {
+            errors += "$id connection group words must be unique inside each group"
+        }
     }
+
+    private fun hasAmbiguousConnectionTitles(groups: List<ConnectionGroup>): Boolean {
+        val titleTokens =
+            groups.map { group ->
+                group.title
+                    .lowercase()
+                    .split(Regex("[^a-z]+"))
+                    .filter { token -> token.length > 2 && token !in CONNECTION_TITLE_STOP_WORDS }
+                    .toSet()
+            }
+        return titleTokens.withIndex().any { (index, tokens) ->
+            titleTokens.drop(index + 1).any { other -> tokens.intersect(other).isNotEmpty() }
+        }
+    }
+
+    private fun normaliseConnectionWord(word: String): String = word.trim().lowercase()
 
     private fun hasValidCompletedSudoku(solution: List<Int>): Boolean {
         if (solution.size != SUDOKU_CELL_COUNT) return false
@@ -412,6 +449,7 @@ class PuzzlePackValidator(
         val SPELLING_TARGET_RANGE = 8..24
         val CROSSWORD_ENTRY_RANGE = 6..14
         val SUDOKU_DIGITS = (1..SUDOKU_SIZE).toSet()
+        val CONNECTION_TITLE_STOP_WORDS = setOf("things", "words")
 
         val DEFAULT_PROHIBITED_WORDS =
             setOf(
