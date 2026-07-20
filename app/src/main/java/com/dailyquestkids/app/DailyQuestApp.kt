@@ -53,6 +53,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -594,6 +595,7 @@ private fun HomeScreen(
             onOpenPuzzle = onOpenPuzzle,
             onOpenHowToPlay = onOpenHowToPlay,
             onOpenParentInfo = onOpenParentInfo,
+            shareActions = shareActions,
         )
     }
 }
@@ -604,6 +606,7 @@ private fun QuestHomeDashboard(
     onOpenPuzzle: (QuestCardUiState) -> Unit,
     onOpenHowToPlay: () -> Unit,
     onOpenParentInfo: () -> Unit,
+    shareActions: ShareActions,
 ) {
     QuestSceneFrame(testTag = "homeScreen") { metrics ->
         val headerHeight = if (metrics.compact) 88f else 114f
@@ -654,6 +657,100 @@ private fun QuestHomeDashboard(
                     )
                 }
             }
+            HomeActionButtons(
+                state = state,
+                shareActions = shareActions,
+                metrics = metrics,
+                modifier = Modifier.fillMaxWidth().height((64f * metrics.scale).dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun HomeActionButtons(
+    state: DailyHomeUiState,
+    shareActions: ShareActions,
+    metrics: QuestScreenMetrics,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(metrics.gap),
+    ) {
+        HomeActionCard(
+            title = "Share Today's Result",
+            subtitle = "Show off your progress!",
+            iconText = "🏆",
+            onClick = { shareActions.share(ShareCardFactory.dailyFive(state)) },
+            metrics = metrics,
+            modifier = Modifier.weight(1f).fillMaxHeight()
+        )
+        HomeActionCard(
+            title = "Streak Calendar",
+            subtitle = "See your journey!",
+            iconText = "📅",
+            onClick = { shareActions.share(ShareCardFactory.streak(state)) },
+            metrics = metrics,
+            modifier = Modifier.weight(1f).fillMaxHeight()
+        )
+    }
+}
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun HomeActionCard(
+    title: String,
+    subtitle: String,
+    iconText: String,
+    onClick: () -> Unit,
+    metrics: QuestScreenMetrics,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape((16f * metrics.scale).dp),
+        color = Color(0xFFE5F3FA),
+        shadowElevation = (2f * metrics.scale).dp,
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = (12f * metrics.scale).dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy((10f * metrics.scale).dp)
+        ) {
+            Surface(
+                modifier = Modifier.size((40f * metrics.scale).dp),
+                shape = CircleShape,
+                color = Color.White,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(iconText, fontSize = (22f * metrics.scale).sp)
+                }
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = title,
+                    color = Color(0xFF061E3E),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = (13f * metrics.scale).sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = subtitle,
+                    color = Color(0xFF4A6B8C),
+                    fontSize = (11f * metrics.scale).sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Text("❯", color = Color(0xFF061E3E), fontWeight = FontWeight.Bold, fontSize = (14f * metrics.scale).sp)
         }
     }
 }
