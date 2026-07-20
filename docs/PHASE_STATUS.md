@@ -272,3 +272,94 @@ Known limitations:
   finished human-authored production season.
 - Genuine reviewer sign-off must not be inferred from the generated candidate
   rows.
+
+## Phase 15 - Full Season Integration Simulation
+
+Status: implemented and passing against the Season One candidate pack.
+
+Completed scope:
+
+- Full-season simulator added to `content-tools`.
+- All 365 days and 1,825 puzzle records are played through the real puzzle
+  engines.
+- Save/restore encode-decode paths are exercised during play-through.
+- Completion events are verified for every puzzle.
+- Daily Five perfect-season and category streak counts are verified.
+- Share-card answer leakage is checked for every puzzle result.
+- Scenario checks cover perfect season, missed days, partial days, hint-heavy
+  use, date rollback, timezone changes and app-update migration invariants.
+- Generated reports:
+  - `reports/full-season-simulation.json`
+  - `reports/full-season-simulation.csv`
+  - `reports/full-season-simulation.html`
+
+Verified on 2026-07-20:
+
+- `:content-tools:ktlintFormat`
+- `:content-tools:ktlintCheck`
+- `:content-tools:detekt`
+- `:content-tools:test`
+- Result: passed.
+
+Generated report summary:
+
+- Simulated completions: 1,825.
+- Share-safe results: 1,825.
+- Save/restore results: 1,825.
+- Daily Five perfect days: 365.
+- Best Daily Five streak: 365.
+
+Known limitations:
+
+- Simulation is engine-level and repository-like, not a real Android
+  DataStore/Room migration test.
+
+## Phase 16 - Accessibility, Performance and Polish
+
+Status: automated audit implemented and passing; manual approvals remain
+release blockers.
+
+Completed scope:
+
+- Automated quality audit added to `content-tools`.
+- Audit checks offline manifest, accessibility settings, parent/how-to
+  surfaces, share-card cleanup, generated validation reports and simulation
+  reports.
+- Generated reports:
+  - `reports/quality-audit.json`
+  - `reports/quality-audit.html`
+
+Verified on 2026-07-20:
+
+- `:content-tools:test`
+- `ktlintCheck`
+- `detekt`
+- Result: passed.
+
+Known limitations:
+
+- Manual TalkBack traversal approval is still required.
+- Final compact-phone, standard-phone and tablet VRT baseline approval is still
+  required.
+- Hardware macrobenchmark approval is still required.
+
+## Phase 17 - Release Preparation
+
+Status: prerelease preparation completed; production release remains blocked by
+content, accessibility/VRT and signing requirements.
+
+Completed scope:
+
+- App version updated to 0.9.0.
+- Installation instructions added.
+- v0.9.0 release notes added.
+- Final release report added.
+- Debug APK, release APK and release AAB build steps are part of the release
+  gate.
+
+Known production blockers:
+
+- Genuine Season One human content review.
+- Replacement of repeated generated candidate content.
+- Manual accessibility and VRT approval.
+- Private release signing configuration.

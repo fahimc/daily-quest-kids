@@ -2,7 +2,7 @@
     "seasonVersion": "phase-preview",
     "dayCount": 20,
     "puzzleCount": 100,
-    "checksum": "994b2a298c66525f2e25e8a25f18bb17dc6cda58fa2760d42fd4fb791eabda36",
+    "checksum": "7cb2618b8b62c7f0ad711e2744df4b442161c2c9ef4a3e89f6cf079afc98fb2e",
     "passed": true,
     "releaseReady": false,
     "categoryCounts": {

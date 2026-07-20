@@ -192,6 +192,8 @@ data class ContentPipelineDirectories(
 fun main(args: Array<String>) {
     val arguments = args.toMutableList()
     val seasonOneCandidate = arguments.remove("--season-one-candidate")
+    val simulateSeason = arguments.remove("--simulate-season")
+    val qualityAudit = arguments.remove("--quality-audit")
     val strictRelease = arguments.remove("--strict-release")
     val outputRoot =
         if (arguments.isEmpty()) {
@@ -199,18 +201,42 @@ fun main(args: Array<String>) {
         } else {
             Path.of(arguments.joinToString(separator = " "))
         }
+    val pack =
+        if (seasonOneCandidate) {
+            SeasonOneCandidateFactory.candidatePack()
+        } else {
+            FixturePackFactory.phasePreviewPack()
+        }
     val result =
         if (seasonOneCandidate) {
             ContentPipeline.run(
-                pack = SeasonOneCandidateFactory.candidatePack(),
+                pack = pack,
                 outputRoot = outputRoot,
                 fileStem = "season-one-candidate",
                 reportStem = "season-one",
                 requireFullSeason = true,
             )
         } else {
-            ContentPipeline.run(outputRoot = outputRoot)
+            ContentPipeline.run(pack = pack, outputRoot = outputRoot)
         }
+    if (simulateSeason) {
+        val simulation = FullSeasonSimulator.simulate(pack)
+        FullSeasonSimulator.writeReports(simulation, outputRoot)
+        if (!simulation.passed) {
+            simulation.errors.forEach { error -> System.err.println(error) }
+            exitProcess(1)
+        }
+    }
+    if (qualityAudit) {
+        val audit = QualityAudit.run(outputRoot)
+        QualityAudit.writeReport(audit, outputRoot)
+        if (!audit.passed) {
+            audit.automatedChecks
+                .filterNot { it.passed }
+                .forEach { check -> System.err.println("${check.id}: ${check.details}") }
+            exitProcess(1)
+        }
+    }
     if (!result.summary.passed || (strictRelease && !result.summary.releaseReady)) {
         (result.summary.errors + result.summary.releaseBlockers).distinct().forEach { error -> System.err.println(error) }
         exitProcess(1)

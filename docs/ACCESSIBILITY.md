@@ -15,10 +15,15 @@ Current implementation:
 - Home cards expose semantic descriptions and button roles.
 - The design system includes category colours plus borders and text labels.
 - The UI uses system fonts rather than bundled unlicensed fonts.
+- Settings expose high contrast, large puzzle text and reduced motion controls.
+- Puzzle screens use labels, borders, state text and iconography in addition to
+  colour.
+- `reports/quality-audit.json` records the current automated accessibility and
+  polish checks.
 
-Pending:
+Manual blockers:
 
 - Full TalkBack traversal pass.
-- Automated touch-target checks.
 - 200% text-scale VRT.
 - High-contrast VRT.
+- Hardware/device-class VRT approval.

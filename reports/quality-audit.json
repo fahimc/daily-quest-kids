@@ -1,0 +1,72 @@
+{
+    "generatedAtHint": "2026-07-20T15:12:56.6274146Z",
+    "passed": true,
+    "automatedChecks": [
+        {
+            "id": "AndroidManifest-contains-androidpermissioninternet",
+            "passed": true,
+            "details": "Manifest must not request internet access."
+        },
+        {
+            "id": "DailyQuestApp-contains-highcontrast",
+            "passed": true,
+            "details": "app/src/main/java/com/dailyquestkids/app/DailyQuestApp.kt should contain `High contrast`."
+        },
+        {
+            "id": "DailyQuestApp-contains-reducedmotion",
+            "passed": true,
+            "details": "app/src/main/java/com/dailyquestkids/app/DailyQuestApp.kt should contain `Reduced motion`."
+        },
+        {
+            "id": "DailyQuestApp-contains-largepuzzletext",
+            "passed": true,
+            "details": "app/src/main/java/com/dailyquestkids/app/DailyQuestApp.kt should contain `Large puzzle text`."
+        },
+        {
+            "id": "DailyQuestApp-contains-parentinformation",
+            "passed": true,
+            "details": "app/src/main/java/com/dailyquestkids/app/DailyQuestApp.kt should contain `Parent information`."
+        },
+        {
+            "id": "DailyQuestApp-contains-howtoplay",
+            "passed": true,
+            "details": "app/src/main/java/com/dailyquestkids/app/DailyQuestApp.kt should contain `How to play`."
+        },
+        {
+            "id": "ShareCardRenderer-contains-cleanupoldsharefiles",
+            "passed": true,
+            "details": "app/src/main/java/com/dailyquestkids/app/ShareCardRenderer.kt should contain `cleanupOldShareFiles`."
+        },
+        {
+            "id": "ShareCardRenderer-contains-width1080",
+            "passed": true,
+            "details": "app/src/main/java/com/dailyquestkids/app/ShareCardRenderer.kt should contain `WIDTH = 1080`."
+        },
+        {
+            "id": "full-season-simulation-contains-passedtrue",
+            "passed": true,
+            "details": "reports/full-season-simulation.json should contain `\"passed\": true`."
+        },
+        {
+            "id": "season-one-validation-contains-passedtrue",
+            "passed": true,
+            "details": "reports/season-one-validation.json should contain `\"passed\": true`."
+        },
+        {
+            "id": "season-one-validation-contains-releasereadyfalse",
+            "passed": true,
+            "details": "reports/season-one-validation.json should contain `\"releaseReady\": false`."
+        },
+        {
+            "id": "build.gradle-contains-versionname",
+            "passed": true,
+            "details": "app/build.gradle.kts should contain `versionName`."
+        }
+    ],
+    "manualBlockers": [
+        "Manual TalkBack traversal approval is still required.",
+        "Final compact-phone, standard-phone and tablet VRT baseline approval is still required.",
+        "Hardware macrobenchmark approval for cold start, navigation, sharing and memory is still required.",
+        "Phase 14 human content review and repeated-content replacement remain release blockers."
+    ]
+}

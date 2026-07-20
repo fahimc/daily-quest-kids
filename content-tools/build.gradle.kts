@@ -13,6 +13,7 @@ application {
 dependencies {
     implementation(project(":core-model"))
     implementation(project(":core-testing"))
+    implementation(project(":puzzle-engine"))
     implementation(project(":puzzle-validator"))
     implementation(libs.kotlinx.serialization.json)
 

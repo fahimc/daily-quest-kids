@@ -42,6 +42,22 @@ Latest verification on 2026-07-19:
 - Screenshot smoke and Wordly visual-state tests compile into the Android test
   APK but have not executed on hardware/emulator yet.
 
+Latest verification on 2026-07-20:
+
+- Full local gate:
+  `.\gradlew.bat --no-daemon --no-parallel --console=plain "-Dorg.gradle.workers.max=1" ktlintFormat ktlintCheck detekt lintDebug test compileDebugAndroidTestKotlin assembleDebug`
+- Result: passed.
+- Connected Android suite:
+  `.\gradlew.bat --no-daemon --no-parallel --console=plain "-Dorg.gradle.workers.max=1" :app:connectedDebugAndroidTest`
+- Result: passed, 54 tests on `phone` AVD.
+- Full-season simulation:
+  `.\gradlew.bat --no-daemon --no-parallel --console=plain "-Dorg.gradle.workers.max=1" :content-tools:run --args="--season-one-candidate --simulate-season --quality-audit <repo-root>"`
+- Result: passed.
+- Strict production release gate:
+  `.\gradlew.bat --no-daemon --no-parallel --console=plain "-Dorg.gradle.workers.max=1" :content-tools:run --args="--season-one-candidate --strict-release <repo-root>"`
+- Result: fails as expected while human-review and repeated-content blockers
+  remain.
+
 Coverage target:
 
 - At least 90% for core domain logic.

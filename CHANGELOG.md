@@ -80,6 +80,13 @@
 - Marked the Season One candidate as structurally valid but not release-ready
   because all generated candidate puzzles still require genuine human review
   and repeated candidate fingerprints require authoring replacement.
+- Added a full-season simulator that solves all 1,825 candidate puzzles through
+  the reusable engines, verifies save/restore, completion events, Daily Five
+  streaks and answer-safe share models, and exports JSON/CSV/HTML reports.
+- Added an automated quality audit for offline manifest, accessibility toggles,
+  sharing cleanup, generated validation reports and release blockers.
+- Added release preparation docs, installation instructions, final release
+  report and v0.9.0 prerelease notes.
 
 ## Phase 0
 
@@ -111,3 +118,10 @@
 - Status: full-season candidate export and automated audit are implemented;
   final production content release remains blocked by human review and
   replacement of repeated generated candidate content.
+
+## Phases 15-17
+
+- Status: full-season simulation, automated quality audit and release
+  preparation artifacts are implemented. Production release remains blocked by
+  content review, repeated-content replacement, manual VRT/accessibility review
+  and private signing configuration.

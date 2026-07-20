@@ -790,7 +790,7 @@ object FixturePackFactory {
                 cg("Pairs", "Things that usually come in pairs.", "shoes", "socks", "gloves", "earrings"),
             ),
             connectionsFixture(
-                cg("Adventure words", "Words linked with exploring.", "quest", "map", "trail", "camp"),
+                cg("Adventure words", "Words linked with exploring.", "route", "map", "trail", "camp"),
                 cg("Bakery foods", "Foods made in a bakery.", "bread", "bun", "muffin", "pastry"),
                 cg("Things with keys", "Things that use keys.", "piano", "lock", "keyboard", "car"),
                 cg("Helpful traits", "Good qualities people can show.", "kind", "fair", "patient", "honest"),
