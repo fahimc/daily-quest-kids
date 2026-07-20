@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Fixed the completed Wordly panel so the native Share action is always
+  visible in the right-side action rail above Done.
 - Added per-puzzle native share and save actions for completed Wordly,
   Spelling B, Crossword, Sudoku and Connections results, backed by the
   existing answer-safe share-card renderer.

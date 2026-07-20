@@ -100,6 +100,9 @@ class WordlyVisualStateInstrumentedTest {
     @Test
     fun successStateRenders() {
         assertWordlyStateRenders(submitGuess(WordlyGameEngine.initial(puzzle), puzzle.solution).state)
+
+        compose.onNodeWithTag("wordlyShareButton").assertIsDisplayed()
+        compose.onNodeWithTag("wordlyDoneButton").assertIsDisplayed()
     }
 
     @Test

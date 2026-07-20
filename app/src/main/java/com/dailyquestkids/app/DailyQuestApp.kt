@@ -684,7 +684,7 @@ private fun HomeActionButtons(
             iconText = "🏆",
             onClick = { shareActions.share(ShareCardFactory.dailyFive(state)) },
             metrics = metrics,
-            modifier = Modifier.weight(1f).fillMaxHeight()
+            modifier = Modifier.weight(1f).fillMaxHeight(),
         )
         HomeActionCard(
             title = "Streak Calendar",
@@ -692,12 +692,13 @@ private fun HomeActionButtons(
             iconText = "📅",
             onClick = { shareActions.share(ShareCardFactory.streak(state)) },
             metrics = metrics,
-            modifier = Modifier.weight(1f).fillMaxHeight()
+            modifier = Modifier.weight(1f).fillMaxHeight(),
         )
     }
 }
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Suppress("LongParameterList")
 @Composable
 private fun HomeActionCard(
     title: String,
@@ -715,11 +716,12 @@ private fun HomeActionCard(
         shadowElevation = (2f * metrics.scale).dp,
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = (12f * metrics.scale).dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = (12f * metrics.scale).dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy((10f * metrics.scale).dp)
+            horizontalArrangement = Arrangement.spacedBy((10f * metrics.scale).dp),
         ) {
             Surface(
                 modifier = Modifier.size((40f * metrics.scale).dp),
@@ -732,7 +734,7 @@ private fun HomeActionCard(
             }
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.Center,
             ) {
                 Text(
                     text = title,

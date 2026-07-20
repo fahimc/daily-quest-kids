@@ -1030,23 +1030,40 @@ private fun WordlySummaryPanel(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            PuzzleResultShareActions(
-                shareCard = state.shareCard,
-                shareActions = actions.shareActions,
-                tagPrefix = "wordly",
-                textScale = metrics.textScale,
-            )
         }
-        Button(
-            onClick = actions.onReturnHome,
+        Column(
             modifier =
                 Modifier
                     .width((100f * metrics.textScale).coerceAtLeast(78f).dp)
-                    .height((metrics.cluePanelHeight - 30f).coerceIn(46f, 76f).dp),
-            shape = RoundedCornerShape(20.dp),
-            contentPadding = PaddingValues(horizontal = 6.dp),
+                    .fillMaxHeight(),
+            verticalArrangement = Arrangement.spacedBy((6f * metrics.textScale).dp),
         ) {
-            Text("Done", fontWeight = FontWeight.Bold, fontSize = (13f * metrics.textScale).sp, maxLines = 1)
+            state.shareCard?.let { shareCard ->
+                Button(
+                    onClick = { actions.shareActions.share(shareCard) },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .testTag("wordlyShareButton"),
+                    shape = RoundedCornerShape(18.dp),
+                    contentPadding = PaddingValues(horizontal = 6.dp),
+                ) {
+                    Text("Share", fontWeight = FontWeight.Bold, fontSize = (13f * metrics.textScale).sp, maxLines = 1)
+                }
+            }
+            Button(
+                onClick = actions.onReturnHome,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .testTag("wordlyDoneButton"),
+                shape = RoundedCornerShape(18.dp),
+                contentPadding = PaddingValues(horizontal = 6.dp),
+            ) {
+                Text("Done", fontWeight = FontWeight.Bold, fontSize = (13f * metrics.textScale).sp, maxLines = 1)
+            }
         }
     }
 }
