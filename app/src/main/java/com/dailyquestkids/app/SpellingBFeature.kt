@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dailyquestkids.core.model.PuzzleCategory
+import com.dailyquestkids.core.model.ShareCardModel
 import com.dailyquestkids.core.model.SpellingBeePuzzle
 import com.dailyquestkids.puzzle.engine.ShareSafety
 import com.dailyquestkids.puzzle.engine.SpellingBCompletionEvent
@@ -63,6 +64,7 @@ internal fun SpellingBRoute(
     dependencies: SpellingBRouteDependencies,
     onBack: () -> Unit,
     onReturnHome: () -> Unit,
+    shareActions: ShareActions,
 ) {
     val savedState by dependencies.spellingProgressStore
         .stateFor(data.puzzle.id)
@@ -137,6 +139,7 @@ internal fun SpellingBRoute(
                     persist(SpellingBGameEngine.submit(data.puzzle, currentGameState()))
                 },
                 onReturnHome = onReturnHome,
+                shareActions = shareActions,
             ),
     )
 }
@@ -209,9 +212,8 @@ internal fun SpellingBGameScreen(
             SpellingFoundPanel(
                 state = state,
                 metrics = metrics,
-                onUseHint = actions.onUseHint,
-                onReturnHome = actions.onReturnHome,
                 onExpand = { expandedFoundList = true },
+                actions = actions,
             )
         }
 
@@ -230,7 +232,7 @@ internal fun SpellingBGameScreen(
             SpellingExpandedFoundPanel(
                 state = state,
                 metrics = metrics,
-                onUseHint = actions.onUseHint,
+                actions = actions,
                 onCollapse = { expandedFoundList = false },
                 modifier =
                     Modifier
@@ -735,9 +737,8 @@ private fun SpellingControlButton(
 private fun SpellingFoundPanel(
     state: SpellingBUiState,
     metrics: SpellingBLayoutMetrics,
-    onUseHint: () -> Unit,
-    onReturnHome: () -> Unit,
     onExpand: () -> Unit,
+    actions: SpellingBGameActions,
 ) {
     Surface(
         modifier =
@@ -802,11 +803,19 @@ private fun SpellingFoundPanel(
                             contentAlignment = Alignment.TopStart,
                         ),
                 )
+                if (state.isCompleted) {
+                    PuzzleResultShareActions(
+                        shareCard = state.shareCard,
+                        shareActions = actions.shareActions,
+                        tagPrefix = "spelling",
+                        textScale = metrics.textScale,
+                    )
+                }
             }
             if (state.isCompleted) {
-                SpellingDoneButton(metrics = metrics, onReturnHome = onReturnHome)
+                SpellingDoneButton(metrics = metrics, onReturnHome = actions.onReturnHome)
             } else {
-                SpellingHintButton(state = state, metrics = metrics, onUseHint = onUseHint)
+                SpellingHintButton(state = state, metrics = metrics, onUseHint = actions.onUseHint)
             }
         }
     }
@@ -875,7 +884,7 @@ private fun SpellingDoneButton(
 private fun SpellingExpandedFoundPanel(
     state: SpellingBUiState,
     metrics: SpellingBLayoutMetrics,
-    onUseHint: () -> Unit,
+    actions: SpellingBGameActions,
     onCollapse: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -917,7 +926,10 @@ private fun SpellingExpandedFoundPanel(
                         ),
                 )
                 if (!state.isCompleted) {
-                    SpellingHintButton(state = state, metrics = metrics, onUseHint = onUseHint)
+                    SpellingHintButton(state = state, metrics = metrics, onUseHint = actions.onUseHint)
+                }
+                if (state.isCompleted) {
+                    SpellingDoneButton(metrics = metrics, onReturnHome = onCollapse)
                 }
             }
             Column(
@@ -961,6 +973,14 @@ private fun SpellingExpandedFoundPanel(
                         modifier = Modifier.testTag("spellingSharePreview"),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = (10f * metrics.textScale).sp,
+                    )
+                }
+                if (state.isCompleted) {
+                    PuzzleResultShareActions(
+                        shareCard = state.shareCard,
+                        shareActions = actions.shareActions,
+                        tagPrefix = "spellingExpanded",
+                        textScale = metrics.textScale,
                     )
                 }
             }
@@ -1026,9 +1046,9 @@ internal object SpellingBUiMapper {
             } else {
                 null
             }
+        val safeShareCard = shareCard?.takeUnless { ShareSafety.leaksForbiddenPayload(it) }
         val safeSharePattern =
-            shareCard
-                ?.takeUnless { ShareSafety.leaksForbiddenPayload(it) }
+            safeShareCard
                 ?.visibleResultPattern
         val message = transientMessage ?: if (gameState.isCompleted) SpellingBMessage.PUZZLE_COMPLETE.userText else null
         val prompt = "Use the middle letter in every word."
@@ -1052,6 +1072,7 @@ internal object SpellingBUiMapper {
             message = message,
             isCompleted = gameState.isCompleted,
             sharePattern = safeSharePattern,
+            shareCard = safeShareCard,
             largeText = settings.largePuzzleText,
         )
     }
@@ -1106,6 +1127,7 @@ internal data class SpellingBGameActions(
     val onShuffle: () -> Unit,
     val onSubmit: () -> Unit,
     val onReturnHome: () -> Unit,
+    val shareActions: ShareActions,
 )
 
 internal data class SpellingBUiState(
@@ -1127,6 +1149,7 @@ internal data class SpellingBUiState(
     val message: String?,
     val isCompleted: Boolean,
     val sharePattern: String?,
+    val shareCard: ShareCardModel?,
     val largeText: Boolean,
 )
 

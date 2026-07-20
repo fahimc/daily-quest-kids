@@ -3,6 +3,7 @@ package com.dailyquestkids.app
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
@@ -129,6 +130,7 @@ class WordlyVisualStateInstrumentedTest {
     ) {
         compose.setContent {
             DailyQuestTheme {
+                val shareActions = ShareActions(LocalContext.current)
                 WordlyGameScreen(
                     state =
                         WordlyUiMapper.map(
@@ -146,6 +148,7 @@ class WordlyVisualStateInstrumentedTest {
                             onDelete = {},
                             onSubmit = {},
                             onReturnHome = {},
+                            shareActions = shareActions,
                         ),
                 )
             }

@@ -3,6 +3,7 @@ package com.dailyquestkids.app
 import com.dailyquestkids.core.common.SeasonCalendar
 import com.dailyquestkids.core.data.SamplePackRepository
 import com.dailyquestkids.core.model.SpellingBeePuzzle
+import com.dailyquestkids.puzzle.engine.ShareSafety
 import com.dailyquestkids.puzzle.engine.SpellingBGameEngine
 import com.dailyquestkids.puzzle.engine.SpellingBMessage
 import com.dailyquestkids.puzzle.engine.SpellingBSaveState
@@ -133,6 +134,8 @@ class SpellingBUiMapperTest {
 
         assertTrue(ui.isCompleted)
         assertNotNull(ui.sharePattern)
+        assertNotNull(ui.shareCard)
+        assertFalse(ShareSafety.leaksForbiddenPayload(ui.shareCard!!))
         puzzle.targetWords.forEach { target ->
             assertFalse(ui.sharePattern.orEmpty().contains(target.word, ignoreCase = true))
         }

@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
@@ -145,6 +146,7 @@ class SpellingBVisualStateInstrumentedTest {
     ) {
         compose.setContent {
             DailyQuestTheme {
+                val shareActions = ShareActions(LocalContext.current)
                 SpellingBGameScreen(
                     state =
                         SpellingBUiMapper.map(
@@ -154,7 +156,7 @@ class SpellingBVisualStateInstrumentedTest {
                             homeState = homeState,
                             transientMessage = transientMessage,
                         ),
-                    actions = emptyActions(),
+                    actions = emptyActions(shareActions),
                 )
             }
         }
@@ -163,6 +165,7 @@ class SpellingBVisualStateInstrumentedTest {
     private fun setInteractiveSpellingContent(activePuzzle: SpellingBeePuzzle = puzzle) {
         compose.setContent {
             DailyQuestTheme {
+                val shareActions = ShareActions(LocalContext.current)
                 var gameState by remember { mutableStateOf(SpellingBGameEngine.initial(activePuzzle)) }
                 var message by remember { mutableStateOf<String?>(null) }
                 SpellingBGameScreen(
@@ -205,13 +208,14 @@ class SpellingBVisualStateInstrumentedTest {
                                 message = result.message?.userText
                             },
                             onReturnHome = {},
+                            shareActions = shareActions,
                         ),
                 )
             }
         }
     }
 
-    private fun emptyActions(): SpellingBGameActions =
+    private fun emptyActions(shareActions: ShareActions): SpellingBGameActions =
         SpellingBGameActions(
             onBack = {},
             onUseHint = {},
@@ -221,6 +225,7 @@ class SpellingBVisualStateInstrumentedTest {
             onShuffle = {},
             onSubmit = {},
             onReturnHome = {},
+            shareActions = shareActions,
         )
 
     private fun assertNoTextInkTouchesEdges(

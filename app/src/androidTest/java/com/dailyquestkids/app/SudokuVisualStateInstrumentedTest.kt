@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.captureToImage
@@ -132,6 +133,7 @@ class SudokuVisualStateInstrumentedTest {
     ) {
         compose.setContent {
             DailyQuestTheme {
+                val shareActions = ShareActions(LocalContext.current)
                 SudokuGameScreen(
                     state =
                         SudokuUiMapper.map(
@@ -141,7 +143,7 @@ class SudokuVisualStateInstrumentedTest {
                             homeState = homeState,
                             transientMessage = transientMessage,
                         ),
-                    actions = emptyActions(),
+                    actions = emptyActions(shareActions),
                 )
             }
         }
@@ -150,6 +152,7 @@ class SudokuVisualStateInstrumentedTest {
     private fun setInteractiveSudokuContent() {
         compose.setContent {
             DailyQuestTheme {
+                val shareActions = ShareActions(LocalContext.current)
                 var gameState by remember { mutableStateOf(SudokuGameEngine.initial(puzzle)) }
                 var message by remember { mutableStateOf<String?>(null) }
                 SudokuGameScreen(
@@ -195,13 +198,14 @@ class SudokuVisualStateInstrumentedTest {
                                 message = result.message?.userText
                             },
                             onReturnHome = {},
+                            shareActions = shareActions,
                         ),
                 )
             }
         }
     }
 
-    private fun emptyActions(): SudokuGameActions =
+    private fun emptyActions(shareActions: ShareActions): SudokuGameActions =
         SudokuGameActions(
             onBack = {},
             onCell = { _, _ -> },
@@ -212,6 +216,7 @@ class SudokuVisualStateInstrumentedTest {
             onRedo = {},
             onUseHint = {},
             onReturnHome = {},
+            shareActions = shareActions,
         )
 
     private fun assertNoTextInkTouchesEdges(

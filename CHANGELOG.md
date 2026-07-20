@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added per-puzzle native share and save actions for completed Wordly,
+  Spelling B, Crossword, Sudoku and Connections results, backed by the
+  existing answer-safe share-card renderer.
+- Added UI mapper and visual-test harness coverage so completed puzzle screens
+  expose safe share cards without leaking hidden answers.
 - Cloned the starter repository and replaced the placeholder README with a
   native Android project baseline.
 - Added Gradle version catalog, Android app module, core domain modules,

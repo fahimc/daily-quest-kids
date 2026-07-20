@@ -3,6 +3,7 @@ package com.dailyquestkids.app
 import com.dailyquestkids.core.common.SeasonCalendar
 import com.dailyquestkids.core.data.SamplePackRepository
 import com.dailyquestkids.core.model.WordlyPuzzle
+import com.dailyquestkids.puzzle.engine.ShareSafety
 import com.dailyquestkids.puzzle.engine.TileState
 import com.dailyquestkids.puzzle.engine.WordlyGameEngine
 import com.dailyquestkids.puzzle.engine.WordlyMessage
@@ -72,6 +73,8 @@ class WordlyUiMapperTest {
         assertTrue(ui.isTerminal)
         assertNotNull(ui.summary)
         assertNotNull(ui.sharePattern)
+        assertNotNull(ui.shareCard)
+        assertFalse(ShareSafety.leaksForbiddenPayload(ui.shareCard!!))
         assertFalse(ui.sharePattern.orEmpty().contains(puzzle.solution, ignoreCase = true))
         state.attempts.forEach { guess ->
             assertFalse(ui.sharePattern.orEmpty().contains(guess, ignoreCase = true))

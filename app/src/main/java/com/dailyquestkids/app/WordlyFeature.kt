@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dailyquestkids.core.model.PuzzleCategory
+import com.dailyquestkids.core.model.ShareCardModel
 import com.dailyquestkids.core.model.WordlyPuzzle
 import com.dailyquestkids.puzzle.engine.ShareSafety
 import com.dailyquestkids.puzzle.engine.TileState
@@ -71,6 +72,7 @@ internal fun WordlyRoute(
     dependencies: WordlyRouteDependencies,
     onBack: () -> Unit,
     onReturnHome: () -> Unit,
+    shareActions: ShareActions,
 ) {
     val savedState by dependencies.wordlyProgressStore
         .stateFor(data.puzzle.id)
@@ -118,6 +120,7 @@ internal fun WordlyRoute(
                     persist(WordlyGameEngine.submit(data.puzzle, gameState))
                 },
                 onReturnHome = onReturnHome,
+                shareActions = shareActions,
             ),
     )
 }
@@ -190,8 +193,7 @@ internal fun WordlyGameScreen(
             WordlyCluePanel(
                 state = state,
                 metrics = metrics,
-                onUseHint = actions.onUseHint,
-                onReturnHome = actions.onReturnHome,
+                actions = actions,
                 onToggleExpanded = { isClueExpanded = !isClueExpanded },
             )
         }
@@ -779,8 +781,7 @@ private fun KeyboardAction(
 private fun WordlyCluePanel(
     state: WordlyUiState,
     metrics: WordlyLayoutMetrics,
-    onUseHint: () -> Unit,
-    onReturnHome: () -> Unit,
+    actions: WordlyGameActions,
     onToggleExpanded: () -> Unit,
 ) {
     val panelModifier =
@@ -804,16 +805,15 @@ private fun WordlyCluePanel(
     ) {
         if (state.summary != null) {
             WordlySummaryPanel(
-                summary = state.summary,
-                sharePattern = state.sharePattern,
+                state = state,
                 metrics = metrics,
-                onReturnHome = onReturnHome,
+                actions = actions,
             )
         } else {
             WordlyActiveClueContent(
                 state = state,
                 metrics = metrics,
-                onUseHint = onUseHint,
+                onUseHint = actions.onUseHint,
             )
         }
     }
@@ -1001,11 +1001,11 @@ private fun WordlyExpandedCluePanel(
 
 @Composable
 private fun WordlySummaryPanel(
-    summary: WordlyLearningSummary,
-    sharePattern: String?,
+    state: WordlyUiState,
     metrics: WordlyLayoutMetrics,
-    onReturnHome: () -> Unit,
+    actions: WordlyGameActions,
 ) {
+    val summary = state.summary ?: return
     Row(
         modifier = Modifier.padding((12f * metrics.textScale).dp),
         horizontalArrangement = Arrangement.spacedBy((8f * metrics.textScale).dp),
@@ -1020,7 +1020,7 @@ private fun WordlySummaryPanel(
             summary.example?.let {
                 Text(it, fontSize = (11f * metrics.textScale).sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
             }
-            sharePattern?.let { pattern ->
+            state.sharePattern?.let { pattern ->
                 Text(
                     text = pattern,
                     modifier = Modifier.testTag("wordlySharePreview"),
@@ -1030,9 +1030,15 @@ private fun WordlySummaryPanel(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+            PuzzleResultShareActions(
+                shareCard = state.shareCard,
+                shareActions = actions.shareActions,
+                tagPrefix = "wordly",
+                textScale = metrics.textScale,
+            )
         }
         Button(
-            onClick = onReturnHome,
+            onClick = actions.onReturnHome,
             modifier =
                 Modifier
                     .width((100f * metrics.textScale).coerceAtLeast(78f).dp)
@@ -1065,9 +1071,9 @@ internal object WordlyUiMapper {
             } else {
                 null
             }
+        val safeShareCard = shareCard?.takeUnless { ShareSafety.leaksForbiddenPayload(it) }
         val safeSharePattern =
-            shareCard
-                ?.takeUnless { ShareSafety.leaksForbiddenPayload(it) }
+            safeShareCard
                 ?.visibleResultPattern
         val openHints = puzzle.hints.filter { it.order in gameState.revealedHintOrders }.sortedBy { it.order }
 
@@ -1089,6 +1095,7 @@ internal object WordlyUiMapper {
             message = message,
             summary = if (gameState.isTerminal) WordlyGameEngine.learningSummary(puzzle, gameState) else null,
             sharePattern = safeSharePattern,
+            shareCard = safeShareCard,
             isTerminal = gameState.isTerminal,
             largeText = settings.largePuzzleText,
         )
@@ -1138,6 +1145,7 @@ internal data class WordlyGameActions(
     val onDelete: () -> Unit,
     val onSubmit: () -> Unit,
     val onReturnHome: () -> Unit,
+    val shareActions: ShareActions,
 )
 
 internal data class WordlyUiState(
@@ -1155,6 +1163,7 @@ internal data class WordlyUiState(
     val message: String?,
     val summary: WordlyLearningSummary?,
     val sharePattern: String?,
+    val shareCard: ShareCardModel?,
     val isTerminal: Boolean,
     val largeText: Boolean,
 )

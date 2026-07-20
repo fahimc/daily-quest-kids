@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -149,6 +150,7 @@ class ConnectionsVisualStateInstrumentedTest {
     ) {
         compose.setContent {
             DailyQuestTheme {
+                val shareActions = ShareActions(LocalContext.current)
                 ConnectionsGameScreen(
                     state =
                         ConnectionsUiMapper.map(
@@ -157,7 +159,7 @@ class ConnectionsVisualStateInstrumentedTest {
                             homeState = homeState,
                             transientMessage = transientMessage,
                         ),
-                    actions = emptyActions(),
+                    actions = emptyActions(shareActions),
                 )
             }
         }
@@ -166,6 +168,7 @@ class ConnectionsVisualStateInstrumentedTest {
     private fun setInteractiveConnectionsContent() {
         compose.setContent {
             DailyQuestTheme {
+                val shareActions = ShareActions(LocalContext.current)
                 var gameState by remember { mutableStateOf(ConnectionsGameEngine.initial(puzzle)) }
                 var message by remember { mutableStateOf<String?>(null) }
                 ConnectionsGameScreen(
@@ -203,13 +206,14 @@ class ConnectionsVisualStateInstrumentedTest {
                                 message = result.message?.userText
                             },
                             onReturnHome = {},
+                            shareActions = shareActions,
                         ),
                 )
             }
         }
     }
 
-    private fun emptyActions(): ConnectionsGameActions =
+    private fun emptyActions(shareActions: ShareActions): ConnectionsGameActions =
         ConnectionsGameActions(
             onBack = {},
             onTile = {},
@@ -218,6 +222,7 @@ class ConnectionsVisualStateInstrumentedTest {
             onDeselect = {},
             onUseHint = {},
             onReturnHome = {},
+            shareActions = shareActions,
         )
 
     private fun assertNoTextInkTouchesEdges(

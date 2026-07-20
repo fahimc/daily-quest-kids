@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
@@ -121,6 +122,7 @@ class CrosswordVisualStateInstrumentedTest {
     ) {
         compose.setContent {
             DailyQuestTheme {
+                val shareActions = ShareActions(LocalContext.current)
                 CrosswordGameScreen(
                     state =
                         CrosswordUiMapper.map(
@@ -130,7 +132,7 @@ class CrosswordVisualStateInstrumentedTest {
                             homeState = homeState,
                             transientMessage = transientMessage,
                         ),
-                    actions = emptyActions(),
+                    actions = emptyActions(shareActions),
                 )
             }
         }
@@ -139,6 +141,7 @@ class CrosswordVisualStateInstrumentedTest {
     private fun setInteractiveCrosswordContent() {
         compose.setContent {
             DailyQuestTheme {
+                val shareActions = ShareActions(LocalContext.current)
                 var gameState by remember { mutableStateOf(CrosswordGameEngine.initial(puzzle)) }
                 var message by remember { mutableStateOf<String?>(null) }
                 CrosswordGameScreen(
@@ -188,13 +191,14 @@ class CrosswordVisualStateInstrumentedTest {
                                 message = null
                             },
                             onReturnHome = {},
+                            shareActions = shareActions,
                         ),
                 )
             }
         }
     }
 
-    private fun emptyActions(): CrosswordGameActions =
+    private fun emptyActions(shareActions: ShareActions): CrosswordGameActions =
         CrosswordGameActions(
             onBack = {},
             onCell = { _, _ -> },
@@ -206,6 +210,7 @@ class CrosswordVisualStateInstrumentedTest {
             onLetter = {},
             onDelete = {},
             onReturnHome = {},
+            shareActions = shareActions,
         )
 
     private fun assertNoTextInkTouchesEdges(

@@ -46,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dailyquestkids.core.model.CrosswordDirection
 import com.dailyquestkids.core.model.CrosswordPuzzle
 import com.dailyquestkids.core.model.PuzzleCategory
+import com.dailyquestkids.core.model.ShareCardModel
 import com.dailyquestkids.puzzle.engine.CrosswordBoardCell
 import com.dailyquestkids.puzzle.engine.CrosswordClueState
 import com.dailyquestkids.puzzle.engine.CrosswordCompletionEvent
@@ -62,6 +63,7 @@ internal fun CrosswordRoute(
     dependencies: CrosswordRouteDependencies,
     onBack: () -> Unit,
     onReturnHome: () -> Unit,
+    shareActions: ShareActions,
 ) {
     val savedState by dependencies.crosswordProgressStore
         .stateFor(data.puzzle.id)
@@ -141,6 +143,7 @@ internal fun CrosswordRoute(
                     transientMessage = null
                 },
                 onReturnHome = onReturnHome,
+                shareActions = shareActions,
             ),
     )
 }
@@ -663,7 +666,11 @@ private fun CrosswordCluePanel(
         shadowElevation = 4.dp,
     ) {
         if (state.isCompleted) {
-            CrosswordCompletionPanel(state = state, metrics = metrics, onReturnHome = actions.onReturnHome)
+            CrosswordCompletionPanel(
+                state = state,
+                metrics = metrics,
+                actions = actions,
+            )
         } else {
             Row(
                 modifier = Modifier.padding((10f * metrics.textScale).dp),
@@ -749,7 +756,7 @@ private fun CrosswordCluePanel(
 private fun CrosswordCompletionPanel(
     state: CrosswordUiState,
     metrics: CrosswordLayoutMetrics,
-    onReturnHome: () -> Unit,
+    actions: CrosswordGameActions,
 ) {
     Row(
         modifier = Modifier.padding((11f * metrics.textScale).dp),
@@ -759,9 +766,15 @@ private fun CrosswordCompletionPanel(
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy((4f * metrics.textScale).dp)) {
             Text("Crossword complete", color = Color(0xFF073B6D), fontWeight = FontWeight.Black, fontSize = (16f * metrics.textScale).sp)
             Text(state.sharePattern.orEmpty(), color = Color(0xFF173444), fontSize = (10f * metrics.textScale).sp, maxLines = 3)
+            PuzzleResultShareActions(
+                shareCard = state.shareCard,
+                shareActions = actions.shareActions,
+                tagPrefix = "crossword",
+                textScale = metrics.textScale,
+            )
         }
         Button(
-            onClick = onReturnHome,
+            onClick = actions.onReturnHome,
             modifier =
                 Modifier
                     .width((88f * metrics.textScale).coerceAtLeast(70f).dp)
@@ -996,7 +1009,8 @@ internal object CrosswordUiMapper {
             } else {
                 null
             }
-        val safeSharePattern = shareCard?.takeUnless { ShareSafety.leaksForbiddenPayload(it) }?.visibleResultPattern
+        val safeShareCard = shareCard?.takeUnless { ShareSafety.leaksForbiddenPayload(it) }
+        val safeSharePattern = safeShareCard?.visibleResultPattern
         val message = transientMessage ?: if (gameState.isCompleted) CrosswordMessage.PUZZLE_COMPLETE.userText else null
 
         return CrosswordUiState(
@@ -1032,6 +1046,7 @@ internal object CrosswordUiMapper {
             keyboardRows = listOf("QWERTYUIOP".toList(), "ASDFGHJKL".toList(), "ZXCVBNM".toList()),
             isCompleted = gameState.isCompleted,
             sharePattern = safeSharePattern,
+            shareCard = safeShareCard,
             largeText = settings.largePuzzleText,
         )
     }
@@ -1092,6 +1107,7 @@ internal data class CrosswordGameActions(
     val onLetter: (Char) -> Unit,
     val onDelete: () -> Unit,
     val onReturnHome: () -> Unit,
+    val shareActions: ShareActions,
 )
 
 internal data class CrosswordUiState(
@@ -1113,6 +1129,7 @@ internal data class CrosswordUiState(
     val keyboardRows: List<List<Char>>,
     val isCompleted: Boolean,
     val sharePattern: String?,
+    val shareCard: ShareCardModel?,
     val largeText: Boolean,
 )
 

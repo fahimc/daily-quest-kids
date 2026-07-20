@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dailyquestkids.core.model.ConnectionsPuzzle
 import com.dailyquestkids.core.model.PuzzleCategory
+import com.dailyquestkids.core.model.ShareCardModel
 import com.dailyquestkids.puzzle.engine.ConnectionsCompletionEvent
 import com.dailyquestkids.puzzle.engine.ConnectionsGameEngine
 import com.dailyquestkids.puzzle.engine.ConnectionsMessage
@@ -54,6 +55,7 @@ internal fun ConnectionsRoute(
     dependencies: ConnectionsRouteDependencies,
     onBack: () -> Unit,
     onReturnHome: () -> Unit,
+    shareActions: ShareActions,
 ) {
     val savedState by dependencies.connectionsProgressStore
         .stateFor(data.puzzle.id)
@@ -122,6 +124,7 @@ internal fun ConnectionsRoute(
                     persist(ConnectionsGameEngine.revealHint(data.puzzle, currentGameState(), confirmReveal = confirm))
                 },
                 onReturnHome = onReturnHome,
+                shareActions = shareActions,
             ),
     )
 }
@@ -625,6 +628,14 @@ private fun ConnectionsHintPanel(
                     lineHeight = (14f * metrics.textScale).sp,
                     maxLines = 3,
                 )
+                if (state.isCompleted) {
+                    PuzzleResultShareActions(
+                        shareCard = state.shareCard,
+                        shareActions = actions.shareActions,
+                        tagPrefix = "connections",
+                        textScale = metrics.textScale,
+                    )
+                }
             }
             if (state.isCompleted || state.isFailed) {
                 ConnectionsButton(
@@ -703,29 +714,11 @@ internal object ConnectionsUiMapper {
     ): ConnectionsUiState {
         val tiles = ConnectionsGameEngine.tiles(puzzle, gameState)
         val solvedGroups = ConnectionsGameEngine.solvedGroups(puzzle, gameState)
-        val shareCard =
-            if (gameState.isCompleted || gameState.isFailed) {
-                ConnectionsGameEngine.shareCard(
-                    puzzle = puzzle,
-                    state = gameState,
-                    utcDate = homeState.date.toString(),
-                    currentStreak = homeState.currentDailyFiveStreak,
-                    bestStreak = homeState.bestDailyFiveStreak,
-                )
-            } else {
-                null
-            }
+        val safeShareCard = safeShareCard(puzzle, gameState, homeState)
         val latestHintText =
             ConnectionsGameEngine
                 .revealedHintTexts(puzzle, gameState)
                 .lastOrNull()
-        val panelText =
-            shareCard
-                ?.takeUnless { ShareSafety.leaksForbiddenPayload(it) }
-                ?.visibleResultPattern
-                ?: latestHintText
-                ?: solvedGroups.lastOrNull()?.explanation
-                ?: "Find four words that share the same idea."
         return ConnectionsUiState(
             tiles =
                 tiles.map { tile ->
@@ -747,25 +740,56 @@ internal object ConnectionsUiMapper {
                 },
             progressBadge = "${gameState.solvedGroupTitles.size}/4",
             hintBadge = (puzzle.hints.size - gameState.revealedHintOrders.size).coerceAtLeast(0).toString(),
-            statusText =
-                transientMessage
-                    ?: if (gameState.isCompleted) {
-                        ConnectionsMessage.PUZZLE_COMPLETE.userText
-                    } else if (gameState.isFailed) {
-                        ConnectionsMessage.FAILED.userText
-                    } else {
-                        "Find groups of four."
-                    },
+            statusText = statusText(gameState, transientMessage),
             selectedCount = gameState.selectedWords.size,
             remainingMistakes = (5 - gameState.mistakeCount).coerceAtLeast(0),
             hintsRemaining = (puzzle.hints.size - gameState.revealedHintOrders.size).coerceAtLeast(0),
             canUseHint = !gameState.isCompleted && !gameState.isFailed && gameState.revealedHintOrders.size < puzzle.hints.size,
             canSubmit = gameState.selectedWords.size == 4 && !gameState.isCompleted && !gameState.isFailed,
-            panelText = panelText,
+            panelText = panelText(safeShareCard, latestHintText, solvedGroups.lastOrNull()?.explanation),
+            shareCard = if (gameState.isCompleted) safeShareCard else null,
             isCompleted = gameState.isCompleted,
             isFailed = gameState.isFailed,
         )
     }
+
+    private fun safeShareCard(
+        puzzle: ConnectionsPuzzle,
+        gameState: ConnectionsSaveState,
+        homeState: DailyHomeUiState,
+    ): ShareCardModel? {
+        if (!gameState.isCompleted && !gameState.isFailed) return null
+        val shareCard =
+            ConnectionsGameEngine.shareCard(
+                puzzle = puzzle,
+                state = gameState,
+                utcDate = homeState.date.toString(),
+                currentStreak = homeState.currentDailyFiveStreak,
+                bestStreak = homeState.bestDailyFiveStreak,
+            )
+        return shareCard.takeUnless { ShareSafety.leaksForbiddenPayload(it) }
+    }
+
+    private fun statusText(
+        gameState: ConnectionsSaveState,
+        transientMessage: String?,
+    ): String =
+        transientMessage
+            ?: when {
+                gameState.isCompleted -> ConnectionsMessage.PUZZLE_COMPLETE.userText
+                gameState.isFailed -> ConnectionsMessage.FAILED.userText
+                else -> "Find groups of four."
+            }
+
+    private fun panelText(
+        safeShareCard: ShareCardModel?,
+        latestHintText: String?,
+        latestSolvedExplanation: String?,
+    ): String =
+        safeShareCard?.visibleResultPattern
+            ?: latestHintText
+            ?: latestSolvedExplanation
+            ?: "Find four words that share the same idea."
 
     private fun groupColor(index: Int): Color =
         listOf(Color(0xFFE45765), Color(0xFFFFA62B), Color(0xFF2D9CDB), Color(0xFF2D8C4A))[index.mod(4)]
@@ -792,6 +816,7 @@ internal data class ConnectionsGameActions(
     val onDeselect: () -> Unit,
     val onUseHint: () -> Unit,
     val onReturnHome: () -> Unit,
+    val shareActions: ShareActions,
 )
 
 internal data class ConnectionsUiState(
@@ -806,6 +831,7 @@ internal data class ConnectionsUiState(
     val canUseHint: Boolean,
     val canSubmit: Boolean,
     val panelText: String,
+    val shareCard: ShareCardModel?,
     val isCompleted: Boolean,
     val isFailed: Boolean,
 ) {

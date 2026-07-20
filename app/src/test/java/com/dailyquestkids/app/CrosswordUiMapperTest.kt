@@ -6,6 +6,7 @@ import com.dailyquestkids.core.model.CrosswordPuzzle
 import com.dailyquestkids.puzzle.engine.CrosswordGameEngine
 import com.dailyquestkids.puzzle.engine.CrosswordMessage
 import com.dailyquestkids.puzzle.engine.CrosswordSaveState
+import com.dailyquestkids.puzzle.engine.ShareSafety
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -104,6 +105,8 @@ class CrosswordUiMapperTest {
 
         assertTrue(ui.isCompleted)
         assertNotNull(ui.sharePattern)
+        assertNotNull(ui.shareCard)
+        assertFalse(ShareSafety.leaksForbiddenPayload(ui.shareCard!!))
         puzzle.entries.forEach { entry ->
             assertFalse(ui.sharePattern.orEmpty().contains(entry.answer, ignoreCase = true))
         }

@@ -226,6 +226,7 @@ private fun MainQuestScaffold(
                                     popUpTo(Route.Home.path) { inclusive = true }
                                 }
                             },
+                            shareActions = shareActions,
                         )
                     }
                     is SpellingBeePuzzle -> {
@@ -249,6 +250,7 @@ private fun MainQuestScaffold(
                                     popUpTo(Route.Home.path) { inclusive = true }
                                 }
                             },
+                            shareActions = shareActions,
                         )
                     }
                     is CrosswordPuzzle -> {
@@ -272,6 +274,7 @@ private fun MainQuestScaffold(
                                     popUpTo(Route.Home.path) { inclusive = true }
                                 }
                             },
+                            shareActions = shareActions,
                         )
                     }
                     is SudokuPuzzle -> {
@@ -295,6 +298,7 @@ private fun MainQuestScaffold(
                                     popUpTo(Route.Home.path) { inclusive = true }
                                 }
                             },
+                            shareActions = shareActions,
                         )
                     }
                     is ConnectionsPuzzle -> {
@@ -318,6 +322,7 @@ private fun MainQuestScaffold(
                                     popUpTo(Route.Home.path) { inclusive = true }
                                 }
                             },
+                            shareActions = shareActions,
                         )
                     }
                     else -> {

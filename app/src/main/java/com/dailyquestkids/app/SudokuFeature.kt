@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dailyquestkids.core.model.PuzzleCategory
+import com.dailyquestkids.core.model.ShareCardModel
 import com.dailyquestkids.core.model.SudokuPuzzle
 import com.dailyquestkids.puzzle.engine.ShareSafety
 import com.dailyquestkids.puzzle.engine.SudokuBoardCell
@@ -57,6 +58,7 @@ internal fun SudokuRoute(
     dependencies: SudokuRouteDependencies,
     onBack: () -> Unit,
     onReturnHome: () -> Unit,
+    shareActions: ShareActions,
 ) {
     val savedState by dependencies.sudokuProgressStore
         .stateFor(data.puzzle.id)
@@ -139,6 +141,7 @@ internal fun SudokuRoute(
                     persist(SudokuGameEngine.revealHint(data.puzzle, currentGameState()))
                 },
                 onReturnHome = onReturnHome,
+                shareActions = shareActions,
             ),
     )
 }
@@ -693,6 +696,12 @@ private fun SudokuHintPanel(
                         fontSize = (10f * metrics.textScale).sp,
                         maxLines = 3,
                     )
+                    PuzzleResultShareActions(
+                        shareCard = state.shareCard,
+                        shareActions = actions.shareActions,
+                        tagPrefix = "sudoku",
+                        textScale = metrics.textScale,
+                    )
                 }
                 Button(
                     onClick = actions.onReturnHome,
@@ -813,7 +822,8 @@ internal object SudokuUiMapper {
             } else {
                 null
             }
-        val safeSharePattern = shareCard?.takeUnless { ShareSafety.leaksForbiddenPayload(it) }?.visibleResultPattern
+        val safeShareCard = shareCard?.takeUnless { ShareSafety.leaksForbiddenPayload(it) }
+        val safeSharePattern = safeShareCard?.visibleResultPattern
         val hintText =
             SudokuGameEngine
                 .revealedHintTexts(puzzle, gameState)
@@ -835,6 +845,7 @@ internal object SudokuUiMapper {
             canRedo = gameState.redoStack.isNotEmpty() && !gameState.isCompleted,
             isCompleted = gameState.isCompleted,
             sharePattern = safeSharePattern,
+            shareCard = safeShareCard,
         )
     }
 
@@ -883,6 +894,7 @@ internal data class SudokuGameActions(
     val onRedo: () -> Unit,
     val onUseHint: () -> Unit,
     val onReturnHome: () -> Unit,
+    val shareActions: ShareActions,
 )
 
 internal data class SudokuUiState(
@@ -901,6 +913,7 @@ internal data class SudokuUiState(
     val canRedo: Boolean,
     val isCompleted: Boolean,
     val sharePattern: String?,
+    val shareCard: ShareCardModel?,
 )
 
 internal data class SudokuCellUiState(

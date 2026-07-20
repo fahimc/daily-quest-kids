@@ -6,6 +6,7 @@ import com.dailyquestkids.core.model.ConnectionsPuzzle
 import com.dailyquestkids.puzzle.engine.ConnectionsGameEngine
 import com.dailyquestkids.puzzle.engine.ConnectionsMessage
 import com.dailyquestkids.puzzle.engine.ConnectionsSaveState
+import com.dailyquestkids.puzzle.engine.ShareSafety
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -72,6 +73,8 @@ class ConnectionsUiMapperTest {
 
         assertTrue(ui.isCompleted)
         assertNotNull(ui.panelText)
+        assertNotNull(ui.shareCard)
+        assertFalse(ShareSafety.leaksForbiddenPayload(ui.shareCard!!))
         puzzle.groups.forEach { group ->
             group.words.forEach { word ->
                 assertFalse(ui.panelText.contains(word, ignoreCase = true))

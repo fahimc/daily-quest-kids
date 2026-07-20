@@ -3,6 +3,7 @@ package com.dailyquestkids.app
 import com.dailyquestkids.core.common.SeasonCalendar
 import com.dailyquestkids.core.data.SamplePackRepository
 import com.dailyquestkids.core.model.SudokuPuzzle
+import com.dailyquestkids.puzzle.engine.ShareSafety
 import com.dailyquestkids.puzzle.engine.SudokuGameEngine
 import com.dailyquestkids.puzzle.engine.SudokuMessage
 import com.dailyquestkids.puzzle.engine.SudokuSaveState
@@ -105,6 +106,8 @@ class SudokuUiMapperTest {
 
         assertTrue(ui.isCompleted)
         assertNotNull(ui.sharePattern)
+        assertNotNull(ui.shareCard)
+        assertFalse(ShareSafety.leaksForbiddenPayload(ui.shareCard!!))
         puzzle.solution.chunked(6).forEach { row ->
             assertFalse(ui.sharePattern.orEmpty().contains(row.joinToString("")))
         }
