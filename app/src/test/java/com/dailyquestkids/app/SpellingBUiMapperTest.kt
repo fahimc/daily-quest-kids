@@ -23,6 +23,11 @@ class SpellingBUiMapperTest {
             .puzzles
             .filterIsInstance<SpellingBeePuzzle>()
             .single()
+    private val painterPuzzle =
+        repository.pack.days[1]
+            .puzzles
+            .filterIsInstance<SpellingBeePuzzle>()
+            .single()
     private val homeState =
         DailyHomeCoordinator(
             repository,
@@ -91,6 +96,26 @@ class SpellingBUiMapperTest {
     }
 
     @Test
+    fun routeStateKeepsPitCountOptimisticUntilSavedStateCatchesUp() {
+        val savedBeforeSubmit = SpellingBGameEngine.initial(painterPuzzle)
+        val submitted = submitWord(painterPuzzle, savedBeforeSubmit, "pit").state
+
+        val merged = SpellingBRouteStateReducer.mergeSavedState(submitted, savedBeforeSubmit)
+        val ui =
+            SpellingBUiMapper.map(
+                puzzle = painterPuzzle,
+                gameState = merged,
+                settings = QuestSettings(),
+                homeState = homeState,
+                transientMessage = SpellingBMessage.WORD_FOUND.userText,
+            )
+
+        assertEquals(listOf("PIT"), ui.foundRows.map { it.word })
+        assertEquals("Words\n1/${painterPuzzle.targetWords.size}", ui.wordCountLabel)
+        assertEquals("Word found.", ui.message)
+    }
+
+    @Test
     fun completedStateProvidesSafeSharePattern() {
         var state = SpellingBGameEngine.initial(puzzle)
         puzzle.targetWords.forEach { target ->
@@ -148,10 +173,25 @@ class SpellingBUiMapperTest {
             SpellingBGameEngine.appendLetter(puzzle, current, letter).state
         }
 
+    private fun type(
+        activePuzzle: SpellingBeePuzzle,
+        text: String,
+        state: SpellingBSaveState = SpellingBGameEngine.initial(activePuzzle),
+    ): SpellingBSaveState =
+        text.fold(state) { current, letter ->
+            SpellingBGameEngine.appendLetter(activePuzzle, current, letter).state
+        }
+
     private fun submitWord(
         state: SpellingBSaveState,
         word: String,
     ) = SpellingBGameEngine.submit(puzzle, type(word, state))
+
+    private fun submitWord(
+        activePuzzle: SpellingBeePuzzle,
+        state: SpellingBSaveState,
+        word: String,
+    ) = SpellingBGameEngine.submit(activePuzzle, type(activePuzzle, word, state))
 
     private fun fixedClock(): Clock = Clock.fixed(Instant.parse("2026-07-19T12:00:00Z"), ZoneOffset.UTC)
 }

@@ -29,6 +29,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,11 +67,22 @@ internal fun SpellingBRoute(
     val savedState by dependencies.spellingProgressStore
         .stateFor(data.puzzle.id)
         .collectAsStateWithLifecycle(initialValue = null)
-    val gameState = savedState ?: SpellingBGameEngine.initial(data.puzzle)
+    val initialState = remember(data.puzzle.id) { SpellingBGameEngine.initial(data.puzzle) }
+    val sessionState = remember(data.puzzle.id) { mutableStateOf<SpellingBSaveState?>(null) }
+    val gameState = sessionState.value ?: savedState ?: initialState
     val scope = rememberCoroutineScope()
     var transientMessage by remember(data.puzzle.id) { mutableStateOf<String?>(null) }
 
+    LaunchedEffect(savedState, data.puzzle.id) {
+        savedState?.let { state ->
+            sessionState.value = SpellingBRouteStateReducer.mergeSavedState(sessionState.value, state)
+        }
+    }
+
+    fun currentGameState(): SpellingBSaveState = sessionState.value ?: savedState ?: initialState
+
     fun persist(result: SpellingBMoveResult) {
+        sessionState.value = result.state
         transientMessage = result.message?.userText
         scope.launch {
             dependencies.spellingProgressStore.save(result.state)
@@ -95,28 +107,34 @@ internal fun SpellingBRoute(
             SpellingBGameActions(
                 onBack = onBack,
                 onUseHint = {
-                    persist(SpellingBGameEngine.revealHint(data.puzzle, gameState))
+                    persist(SpellingBGameEngine.revealHint(data.puzzle, currentGameState()))
                 },
                 onLetter = { letter ->
-                    persist(SpellingBGameEngine.appendLetter(data.puzzle, gameState, letter))
+                    persist(SpellingBGameEngine.appendLetter(data.puzzle, currentGameState(), letter))
                 },
                 onDelete = {
+                    val nextState = SpellingBGameEngine.deleteLetter(data.puzzle, currentGameState())
+                    sessionState.value = nextState
                     scope.launch {
-                        dependencies.spellingProgressStore.save(SpellingBGameEngine.deleteLetter(data.puzzle, gameState))
+                        dependencies.spellingProgressStore.save(nextState)
                     }
                 },
                 onClear = {
+                    val nextState = SpellingBGameEngine.clearInput(data.puzzle, currentGameState())
+                    sessionState.value = nextState
                     scope.launch {
-                        dependencies.spellingProgressStore.save(SpellingBGameEngine.clearInput(data.puzzle, gameState))
+                        dependencies.spellingProgressStore.save(nextState)
                     }
                 },
                 onShuffle = {
+                    val nextState = SpellingBGameEngine.shuffle(data.puzzle, currentGameState())
+                    sessionState.value = nextState
                     scope.launch {
-                        dependencies.spellingProgressStore.save(SpellingBGameEngine.shuffle(data.puzzle, gameState))
+                        dependencies.spellingProgressStore.save(nextState)
                     }
                 },
                 onSubmit = {
-                    persist(SpellingBGameEngine.submit(data.puzzle, gameState))
+                    persist(SpellingBGameEngine.submit(data.puzzle, currentGameState()))
                 },
                 onReturnHome = onReturnHome,
             ),
@@ -136,6 +154,25 @@ private suspend fun handleSpellingCompletion(
         todaysPuzzleIds = dependencies.todaysPuzzleIds,
     )
     dependencies.spellingProgressStore.save(SpellingBGameEngine.acknowledgeCompletion(resultState))
+}
+
+internal object SpellingBRouteStateReducer {
+    fun mergeSavedState(
+        sessionState: SpellingBSaveState?,
+        savedState: SpellingBSaveState,
+    ): SpellingBSaveState =
+        when {
+            sessionState == null -> savedState
+            sessionState.puzzleId != savedState.puzzleId -> savedState
+            savedState.progressRank() > sessionState.progressRank() -> savedState
+            else -> sessionState
+        }
+
+    private fun SpellingBSaveState.progressRank(): Int =
+        foundWords.size * 1_000 +
+            revealedHintOrders.size * 100 +
+            currentInput.length +
+            if (isCompleted) 100_000 else 0
 }
 
 @Composable
@@ -425,7 +462,8 @@ private fun SpellingScorePanel(
             Modifier
                 .fillMaxWidth()
                 .height(metrics.scorePanelHeight.dp)
-                .testTag("spellingScorePanel"),
+                .testTag("spellingScorePanel")
+                .semantics(mergeDescendants = true) {},
         color = Color(0xFF083C6D).copy(alpha = 0.96f),
         border = BorderStroke(2.dp, Color(0xFF1F7DC9)),
         shape = RoundedCornerShape((20f * metrics.textScale).dp),

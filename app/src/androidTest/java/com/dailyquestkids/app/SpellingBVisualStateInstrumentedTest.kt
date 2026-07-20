@@ -39,6 +39,11 @@ class SpellingBVisualStateInstrumentedTest {
             .puzzles
             .filterIsInstance<SpellingBeePuzzle>()
             .single()
+    private val painterPuzzle =
+        repository.pack.days[1]
+            .puzzles
+            .filterIsInstance<SpellingBeePuzzle>()
+            .single()
     private val homeState =
         DailyHomeCoordinator(
             repository,
@@ -108,6 +113,20 @@ class SpellingBVisualStateInstrumentedTest {
         assertNoTextInkTouchesEdges("spellingCurrentWord", includeVerticalEdges = false)
     }
 
+    @Test
+    fun pitFoundWordCountUpdatesImmediatelyAfterSubmit() {
+        setInteractiveSpellingContent(painterPuzzle)
+
+        compose.onNodeWithTag("spellingLetter-P").performClick()
+        compose.onNodeWithTag("spellingCentreLetter").performClick()
+        compose.onNodeWithTag("spellingLetter-T").performClick()
+        compose.onNodeWithTag("spellingSubmitButton").performClick()
+
+        compose.onNodeWithTag("spellingCurrentWord").assertTextContains("Word found", substring = true)
+        compose.onNodeWithTag("spellingScorePanel").assertTextContains("Words", substring = true)
+        compose.onNodeWithTag("spellingScorePanel").assertTextContains("1/${painterPuzzle.targetWords.size}", substring = true)
+    }
+
     private fun assertSpellingStateRenders(state: SpellingBSaveState) {
         setSpellingContent(state)
 
@@ -141,15 +160,15 @@ class SpellingBVisualStateInstrumentedTest {
         }
     }
 
-    private fun setInteractiveSpellingContent() {
+    private fun setInteractiveSpellingContent(activePuzzle: SpellingBeePuzzle = puzzle) {
         compose.setContent {
             DailyQuestTheme {
-                var gameState by remember { mutableStateOf(SpellingBGameEngine.initial(puzzle)) }
+                var gameState by remember { mutableStateOf(SpellingBGameEngine.initial(activePuzzle)) }
                 var message by remember { mutableStateOf<String?>(null) }
                 SpellingBGameScreen(
                     state =
                         SpellingBUiMapper.map(
-                            puzzle = puzzle,
+                            puzzle = activePuzzle,
                             gameState = gameState,
                             settings = QuestSettings(),
                             homeState = homeState,
@@ -159,29 +178,29 @@ class SpellingBVisualStateInstrumentedTest {
                         SpellingBGameActions(
                             onBack = {},
                             onUseHint = {
-                                val result = SpellingBGameEngine.revealHint(puzzle, gameState)
+                                val result = SpellingBGameEngine.revealHint(activePuzzle, gameState)
                                 gameState = result.state
                                 message = result.message?.userText
                             },
                             onLetter = { letter ->
-                                val result = SpellingBGameEngine.appendLetter(puzzle, gameState, letter)
+                                val result = SpellingBGameEngine.appendLetter(activePuzzle, gameState, letter)
                                 gameState = result.state
                                 message = result.message?.userText
                             },
                             onDelete = {
-                                gameState = SpellingBGameEngine.deleteLetter(puzzle, gameState)
+                                gameState = SpellingBGameEngine.deleteLetter(activePuzzle, gameState)
                                 message = null
                             },
                             onClear = {
-                                gameState = SpellingBGameEngine.clearInput(puzzle, gameState)
+                                gameState = SpellingBGameEngine.clearInput(activePuzzle, gameState)
                                 message = null
                             },
                             onShuffle = {
-                                gameState = SpellingBGameEngine.shuffle(puzzle, gameState)
+                                gameState = SpellingBGameEngine.shuffle(activePuzzle, gameState)
                                 message = null
                             },
                             onSubmit = {
-                                val result = SpellingBGameEngine.submit(puzzle, gameState)
+                                val result = SpellingBGameEngine.submit(activePuzzle, gameState)
                                 gameState = result.state
                                 message = result.message?.userText
                             },
