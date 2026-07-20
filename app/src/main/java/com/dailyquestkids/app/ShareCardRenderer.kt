@@ -100,10 +100,23 @@ internal object ShareCardRenderer {
             Intent(Intent.ACTION_SEND).apply {
                 type = MIME_TYPE
                 putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_TEXT, shareText(model))
+                putExtra(Intent.EXTRA_TITLE, "${model.brand} result")
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
         context.startActivity(Intent.createChooser(intent, "Share Daily Quest Kids"))
     }
+
+    fun shareText(model: ShareCardModel): String =
+        listOf(
+            model.brand,
+            model.utcDate,
+            model.visibleResultPattern,
+            "Hints used ${model.hintsUsed}",
+            "Current streak ${model.currentStreak}",
+            "Best streak ${model.bestStreak}",
+            "Answers hidden.",
+        ).joinToString(separator = "\n")
 
     fun cleanupOldShareFiles(context: Context) {
         File(context.cacheDir, SHARE_DIRECTORY)
@@ -149,17 +162,14 @@ internal object ShareCardRenderer {
         paint.textSize = 40f
         paint.isFakeBoldText = false
         canvas.drawText(model.utcDate, WIDTH / 2f, 282f, paint)
-        paint.textSize = 58f
-        paint.isFakeBoldText = true
-        model.visibleResultPattern.split("\n").forEachIndexed { index, line ->
-            canvas.drawText(line, WIDTH / 2f, 410f + index * 88f, paint)
-        }
+        val nextY = drawResultPattern(canvas, paint, model.visibleResultPattern)
         paint.color = Color.rgb(255, 183, 38)
-        canvas.drawCircle(WIDTH / 2f, 875f, 140f, paint)
+        val badgeY = (nextY + 120f).coerceIn(880f, 970f)
+        canvas.drawCircle(WIDTH / 2f, badgeY, 118f, paint)
         paint.color = Color.WHITE
-        paint.textSize = 132f
+        paint.textSize = 116f
         paint.isFakeBoldText = true
-        canvas.drawText("★", WIDTH / 2f, 923f, paint)
+        canvas.drawText("★", WIDTH / 2f, badgeY + 40f, paint)
         paint.color = Color.rgb(5, 56, 106)
         paint.textSize = 38f
         canvas.drawText("Ask a grown-up before sharing outside the app.", WIDTH / 2f, 1148f, paint)
@@ -168,7 +178,82 @@ internal object ShareCardRenderer {
         canvas.drawText("Answers and personal details are hidden.", WIDTH / 2f, 1205f, paint)
     }
 
+    private fun drawResultPattern(
+        canvas: Canvas,
+        paint: Paint,
+        pattern: String,
+    ): Float {
+        var y = 370f
+        pattern
+            .split("\n")
+            .filter { it.isNotBlank() }
+            .forEachIndexed { index, line ->
+                if (line.isTilePattern()) {
+                    drawTilePattern(canvas, line, y)
+                    y += 72f
+                } else {
+                    paint.color = Color.rgb(5, 56, 106)
+                    paint.textAlign = Paint.Align.CENTER
+                    paint.isFakeBoldText = index == 0
+                    drawCenteredTextFit(canvas, paint, line, y, if (index == 0) 54f else 42f)
+                    y += if (index == 0) 66f else 54f
+                }
+            }
+        return y
+    }
+
+    private fun drawCenteredTextFit(
+        canvas: Canvas,
+        paint: Paint,
+        text: String,
+        y: Float,
+        maxTextSize: Float,
+    ) {
+        paint.textSize = maxTextSize
+        while (paint.measureText(text) > 790f && paint.textSize > 26f) {
+            paint.textSize -= 2f
+        }
+        canvas.drawText(text, WIDTH / 2f, y, paint)
+    }
+
+    private fun drawTilePattern(
+        canvas: Canvas,
+        line: String,
+        centerY: Float,
+    ) {
+        val labels = line.split("-")
+        val tileSize = 56f
+        val gap = 14f
+        val totalWidth = labels.size * tileSize + (labels.size - 1) * gap
+        var left = WIDTH / 2f - totalWidth / 2f
+        labels.forEach { label ->
+            val tilePaint = Paint(Paint.ANTI_ALIAS_FLAG)
+            tilePaint.color = label.tileColor()
+            canvas.drawRoundRect(
+                RectF(left, centerY - tileSize + 10f, left + tileSize, centerY + 10f),
+                10f,
+                10f,
+                tilePaint,
+            )
+            left += tileSize + gap
+        }
+    }
+
+    private fun String.isTilePattern(): Boolean {
+        val labels = split("-")
+        return labels.size == 5 && labels.all { it in TILE_LABELS }
+    }
+
+    private fun String.tileColor(): Int =
+        when (this) {
+            "correct" -> Color.rgb(44, 164, 86)
+            "present" -> Color.rgb(242, 190, 46)
+            "absent" -> Color.rgb(55, 53, 68)
+            else -> Color.rgb(222, 232, 238)
+        }
+
     private const val SHARE_DIRECTORY = "share-cards"
     private const val MIME_TYPE = "image/png"
     private const val PNG_QUALITY = 100
+    private val TILE_LABELS = setOf("correct", "present", "absent", "empty")
 }

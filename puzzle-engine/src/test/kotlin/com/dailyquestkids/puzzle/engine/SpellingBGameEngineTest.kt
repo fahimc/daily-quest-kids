@@ -122,6 +122,11 @@ class SpellingBGameEngineTest {
             )
 
         assertFalse(ShareSafety.leaksForbiddenPayload(share))
+        assertTrue(share.visibleResultPattern.contains("Spelling B 001"))
+        assertTrue(share.visibleResultPattern.contains("Points"))
+        assertTrue(share.visibleResultPattern.contains("Found"))
+        assertTrue(share.visibleResultPattern.contains("Hints 0"))
+        assertTrue(share.visibleResultPattern.contains("Streak 1"))
         assertTrue(share.forbiddenPayloads.contains("planter"))
         puzzle.targetWords.forEach { target ->
             assertFalse(share.visibleResultPattern.contains(target.word, ignoreCase = true))

@@ -126,6 +126,11 @@ class ConnectionsGameEngineTest {
         assertNotNull(event)
         assertEquals(null, ConnectionsGameEngine.pendingCompletion(acknowledged))
         assertFalse(ShareSafety.leaksForbiddenPayload(share))
+        assertTrue(share.visibleResultPattern.contains("Connections 001"))
+        assertTrue(share.visibleResultPattern.contains("Groups 4/4"))
+        assertTrue(share.visibleResultPattern.contains("Mistakes 0/5"))
+        assertTrue(share.visibleResultPattern.contains("Hints 0"))
+        assertTrue(share.visibleResultPattern.contains("Streak 3"))
     }
 
     @Test

@@ -204,7 +204,13 @@ object WordlyGameEngine {
             brand = "Daily Quest Kids",
             utcDate = utcDate,
             cardType = ShareCardType.INDIVIDUAL_RESULT,
-            visibleResultPattern = sharePattern(puzzle, state),
+            visibleResultPattern =
+                listOf(
+                    "Wordly ${sharePuzzleNumber(puzzle.id)} ${wordlyShareScore(state)}",
+                    "Hints ${state.revealedHintOrders.size}",
+                    "Streak $currentStreak",
+                    sharePattern(puzzle, state),
+                ).joinToString(separator = "\n"),
             hintsUsed = state.revealedHintOrders.size,
             currentStreak = currentStreak,
             bestStreak = bestStreak,
@@ -272,12 +278,25 @@ object WordlyGameEngine {
                 .joinToString(separator = "-") { score -> score.state.shareLabel }
         }
 
+    private fun wordlyShareScore(state: WordlySaveState): String =
+        if (state.isCompleted) {
+            "${state.attempts.size}/$MAX_ATTEMPTS"
+        } else {
+            "X/$MAX_ATTEMPTS"
+        }
+
     private val json =
         Json {
             ignoreUnknownKeys = true
             encodeDefaults = true
         }
 }
+
+fun sharePuzzleNumber(puzzleId: String): String =
+    puzzleId
+        .substringAfterLast("-")
+        .takeIf { suffix -> suffix.all { it.isDigit() } && suffix.isNotBlank() }
+        ?: puzzleId
 
 @Serializable
 data class WordlySaveState(

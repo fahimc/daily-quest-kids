@@ -218,9 +218,11 @@ object SudokuGameEngine {
             cardType = ShareCardType.INDIVIDUAL_RESULT,
             visibleResultPattern =
                 listOf(
-                    "Sudoku",
-                    "Filled $filled/$CELL_COUNT",
+                    "Sudoku ${sharePuzzleNumber(puzzle.id)}",
+                    "Filled $filled/$CELL_COUNT cells",
                     "Mistakes $mistakes",
+                    "Hints ${safeState.revealedHintOrders.size}",
+                    "Streak $currentStreak",
                     if (safeState.isCompleted) "Complete" else "In progress",
                 ).joinToString(separator = "\n"),
             hintsUsed = safeState.revealedHintOrders.size,

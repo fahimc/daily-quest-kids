@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Expanded individual puzzle sharing so native shares include spoiler-safe
+  result details and the share image renders Wordly-style colour rows without
+  exposing answers, guesses, clues or groups.
 - Fixed the completed Wordly panel so the native Share action is always
   visible in the right-side action rail above Done.
 - Added per-puzzle native share and save actions for completed Wordly,

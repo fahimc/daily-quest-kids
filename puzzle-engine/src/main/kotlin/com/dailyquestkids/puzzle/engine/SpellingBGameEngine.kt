@@ -203,11 +203,13 @@ object SpellingBGameEngine {
             cardType = ShareCardType.INDIVIDUAL_RESULT,
             visibleResultPattern =
                 listOf(
-                    "Spelling B",
+                    "Spelling B ${sharePuzzleNumber(puzzle.id)}",
                     "Points ${score(puzzle, safeState)}/${totalScore(puzzle)}",
                     "Found ${safeState.foundWords.size}/${puzzle.targetWords.size}",
                     "Rank ${achievement(puzzle, safeState).title}",
                     "Full-letter words ${safeState.foundWords.count { usesEveryLetter(puzzle, it) }}",
+                    "Hints ${safeState.revealedHintOrders.size}",
+                    "Streak $currentStreak",
                 ).joinToString(separator = "\n"),
             hintsUsed = safeState.revealedHintOrders.size,
             currentStreak = currentStreak,

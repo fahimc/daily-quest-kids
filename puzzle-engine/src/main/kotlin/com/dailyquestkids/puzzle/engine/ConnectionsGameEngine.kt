@@ -221,9 +221,11 @@ object ConnectionsGameEngine {
             cardType = ShareCardType.INDIVIDUAL_RESULT,
             visibleResultPattern =
                 listOf(
-                    "Connections",
+                    "Connections ${sharePuzzleNumber(puzzle.id)}",
                     "Groups ${safeState.solvedGroupTitles.size}/$GROUP_SIZE",
                     "Mistakes ${safeState.mistakeCount}/$MAX_MISTAKES",
+                    "Hints ${safeState.revealedHintOrders.size}",
+                    "Streak $currentStreak",
                     status,
                 ).joinToString(separator = "\n"),
             hintsUsed = safeState.revealedHintOrders.size,

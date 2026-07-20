@@ -301,9 +301,11 @@ object CrosswordGameEngine {
             cardType = ShareCardType.INDIVIDUAL_RESULT,
             visibleResultPattern =
                 listOf(
-                    "Crossword",
-                    "Filled $filled/$total",
+                    "Crossword ${sharePuzzleNumber(puzzle.id)}",
                     "Clues solved ${solvedEntryCount(puzzle, safeState)}/${puzzle.entries.size}",
+                    "Filled $filled/$total cells",
+                    "Hints ${safeState.revealedHintOrders.size}",
+                    "Streak $currentStreak",
                     if (safeState.isCompleted) "Complete" else "In progress",
                 ).joinToString(separator = "\n"),
             hintsUsed = safeState.revealedHintOrders.size,

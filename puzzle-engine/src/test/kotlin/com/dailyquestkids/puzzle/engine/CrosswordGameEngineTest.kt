@@ -154,6 +154,11 @@ class CrosswordGameEngineTest {
             )
 
         assertFalse(ShareSafety.leaksForbiddenPayload(share))
+        assertTrue(share.visibleResultPattern.contains("Crossword 001"))
+        assertTrue(share.visibleResultPattern.contains("Clues solved"))
+        assertTrue(share.visibleResultPattern.contains("Filled"))
+        assertTrue(share.visibleResultPattern.contains("Hints 0"))
+        assertTrue(share.visibleResultPattern.contains("Streak 1"))
         puzzle.entries.forEach { entry ->
             assertTrue(share.forbiddenPayloads.contains(entry.answer))
             assertFalse(share.visibleResultPattern.contains(entry.answer, ignoreCase = true))

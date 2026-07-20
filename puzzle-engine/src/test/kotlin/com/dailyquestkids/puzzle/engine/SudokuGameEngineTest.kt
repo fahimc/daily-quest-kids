@@ -152,6 +152,11 @@ class SudokuGameEngineTest {
             )
 
         assertFalse(ShareSafety.leaksForbiddenPayload(share))
+        assertTrue(share.visibleResultPattern.contains("Sudoku 001"))
+        assertTrue(share.visibleResultPattern.contains("Filled"))
+        assertTrue(share.visibleResultPattern.contains("Mistakes"))
+        assertTrue(share.visibleResultPattern.contains("Hints 0"))
+        assertTrue(share.visibleResultPattern.contains("Streak 1"))
         puzzle.solution.chunked(6).forEach { row ->
             assertFalse(share.visibleResultPattern.contains(row.joinToString("")))
         }

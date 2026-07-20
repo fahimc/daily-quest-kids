@@ -106,6 +106,10 @@ class WordlyGameEngineTest {
             )
 
         assertFalse(ShareSafety.leaksForbiddenPayload(share))
+        assertTrue(share.visibleResultPattern.contains("Wordly 001 2/6"))
+        assertTrue(share.visibleResultPattern.contains("Hints 0"))
+        assertTrue(share.visibleResultPattern.contains("Streak 2"))
+        assertTrue(share.visibleResultPattern.contains("correct"))
         assertTrue(share.forbiddenPayloads.contains(puzzle.solution))
         state.attempts.forEach { guess ->
             assertFalse(share.visibleResultPattern.contains(guess, ignoreCase = true))
