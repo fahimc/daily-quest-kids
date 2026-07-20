@@ -224,3 +224,51 @@ Known limitations:
 - The instrumented visual tests compile but have not executed because no
   emulator or device is attached.
 - Real Android screenshot baselines still need capture and approval.
+
+## Phase 14 - Season One Candidate Content
+
+Status: full-season candidate export and automated audit are implemented;
+production release remains blocked by genuine human content review and
+replacement of repeated generated candidate fingerprints.
+
+Completed scope:
+
+- `SeasonOneCandidateFactory` exports 365 days and 1,825 puzzle records.
+- Candidate puzzle IDs are stable across all five categories for days 1-365.
+- Candidate review metadata is explicitly set to `humanReviewed=false`.
+- Content pipeline supports `--season-one-candidate` mode.
+- Generated artifacts include:
+  - `puzzle-pack/season-one-candidate.json`
+  - `puzzle-pack/season-one-candidate.sha256`
+  - `reports/season-one-validation.json`
+  - `reports/season-one-puzzles.csv`
+  - `reports/season-one-human-review.csv`
+  - `reports/season-one-validation.html`
+- Release audit reports per-category counts, human-review blockers and repeated
+  content fingerprints.
+
+Verified on 2026-07-20:
+
+- `:content-tools:ktlintFormat`
+- `:content-tools:ktlintCheck`
+- `:content-tools:detekt`
+- `:content-tools:test`
+- Result: passed.
+
+Generated report summary:
+
+- Days: 365.
+- Puzzles: 1,825.
+- Category counts: 365 Wordly, 365 Spelling B, 365 Crossword, 365 Sudoku and
+  365 Connections.
+- Automated structural validation: passed.
+- Release readiness: blocked.
+- Human review required: 1,825 puzzles.
+- Repeated candidate content fingerprints: 1,715.
+
+Known limitations:
+
+- The generated candidate pack is a release-blocking content scaffold, not a
+  finished human-authored production season.
+- Genuine reviewer sign-off must not be inferred from the generated candidate
+  rows.

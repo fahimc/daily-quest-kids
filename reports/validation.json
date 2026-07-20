@@ -4,5 +4,24 @@
     "puzzleCount": 100,
     "checksum": "994b2a298c66525f2e25e8a25f18bb17dc6cda58fa2760d42fd4fb791eabda36",
     "passed": true,
-    "errors": []
+    "releaseReady": false,
+    "categoryCounts": {
+        "WORDLY": 20,
+        "SPELLING_B": 20,
+        "CROSSWORD": 20,
+        "SUDOKU": 20,
+        "CONNECTIONS": 20
+    },
+    "humanReviewRequiredCount": 0,
+    "duplicateContentFingerprintCount": 0,
+    "errors": [],
+    "releaseBlockers": [
+        "Season must contain exactly 365 days.",
+        "Season must contain exactly 1825 puzzles.",
+        "WORDLY must contain 365 puzzles; found 20.",
+        "SPELLING_B must contain 365 puzzles; found 20.",
+        "CROSSWORD must contain 365 puzzles; found 20.",
+        "SUDOKU must contain 365 puzzles; found 20.",
+        "CONNECTIONS must contain 365 puzzles; found 20."
+    ]
 }

@@ -19,18 +19,35 @@ Validators currently check:
 - Sudoku cell count, value range and row validity.
 - Connections group and visible-word counts.
 
-Production validation must still add:
+Production validation now includes:
 
 - pipeline export wiring for the full 365-day count enforcement.
-- stronger Sudoku uniqueness and technique validation.
 - crossword crossing consistency.
 - semantic ambiguity detection for Connections.
-- near-duplicate and hint-leak reports.
 - checksum generation and verification.
 - human-review report export.
+
+Production validation must still add:
+
+- stronger independent Sudoku uniqueness and technique validation outside the
+  current validator.
+- stronger near-duplicate reports beyond exact content fingerprints.
+- independent semantic review for vocabulary, clues and Connections group
+  ambiguity.
 
 Current preview content:
 
 - Phase 6 includes 20 human-reviewed Wordly fixtures.
 - Later puzzle categories still use automated preview fixtures until their
   feature/content phases.
+
+Phase 14 Season One candidate content:
+
+- `puzzle-pack/season-one-candidate.json` contains 365 days and 1,825 puzzle
+  records.
+- `reports/season-one-validation.json` records automated structural pass,
+  per-category counts of 365 puzzles each and release blockers.
+- The candidate is not release-ready. The report intentionally marks all 1,825
+  candidate puzzles as requiring genuine human review before production release.
+- The report also flags repeated content fingerprints that must be replaced
+  through real content authoring before release.

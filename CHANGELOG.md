@@ -74,6 +74,12 @@
   report.
 - Verified the generated preview pack covers 20 days and 100 puzzles with a
   passing validator report.
+- Added a Phase 14 Season One candidate export containing 365 days and 1,825
+  puzzle records, with per-category counts, checksum, human-review CSV and
+  release-blocker audit reports.
+- Marked the Season One candidate as structurally valid but not release-ready
+  because all generated candidate puzzles still require genuine human review
+  and repeated candidate fingerprints require authoring replacement.
 
 ## Phase 0
 
@@ -99,3 +105,9 @@
 
 - Status: streak history, achievements, secure sharing and deterministic content
   export/reporting are implemented for the preview season.
+
+## Phase 14
+
+- Status: full-season candidate export and automated audit are implemented;
+  final production content release remains blocked by human review and
+  replacement of repeated generated candidate content.
