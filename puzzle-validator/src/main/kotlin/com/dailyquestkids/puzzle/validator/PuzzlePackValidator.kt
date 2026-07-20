@@ -129,8 +129,18 @@ class PuzzlePackValidator(
         val centre = puzzle.centreLetter.lowercaseChar()
         if (letters.size != 7 || letters.toSet().size != 7) errors += "${puzzle.id} must have seven unique letters"
         if (centre !in letters) errors += "${puzzle.id} centre letter must be in letter set"
+        if (puzzle.targetWords.size !in SPELLING_TARGET_RANGE) {
+            errors += "${puzzle.id} must have 8 to 24 target words"
+        }
+        val targetTexts = puzzle.targetWords.map { it.word.lowercase() }
+        if (targetTexts.toSet().size != targetTexts.size) errors += "${puzzle.id} target words must be unique"
+        if (targetTexts.none { word -> letters.all { it in word } }) {
+            errors += "${puzzle.id} should include an all-letter target word"
+        }
+        if (spellingScoreTotal(targetTexts, letters) <= 0) errors += "${puzzle.id} must have a positive score total"
         puzzle.targetWords.forEach { target ->
             val word = target.word.lowercase()
+            if (target.definition.isBlank()) errors += "${puzzle.id} target definition is required: $word"
             if (word.length < 3) errors += "${puzzle.id} target word too short: $word"
             if (centre !in word) errors += "${puzzle.id} target word misses centre: $word"
             if (word.any { it !in letters }) errors += "${puzzle.id} target word uses invalid letters: $word"
@@ -202,9 +212,20 @@ class PuzzlePackValidator(
         if (unsafe.isNotEmpty()) errors += "$id contains prohibited words: $unsafe"
     }
 
+    private fun spellingScoreTotal(
+        words: List<String>,
+        letters: List<Char>,
+    ): Int =
+        words.sumOf { word ->
+            val base = if (word.length <= 4) 1 else word.length
+            val bonus = if (letters.all { it in word }) 7 else 0
+            base + bonus
+        }
+
     private companion object {
         const val SEASON_LENGTH = 365
         const val SUDOKU_CELL_COUNT = 36
+        val SPELLING_TARGET_RANGE = 8..24
 
         val DEFAULT_PROHIBITED_WORDS =
             setOf(

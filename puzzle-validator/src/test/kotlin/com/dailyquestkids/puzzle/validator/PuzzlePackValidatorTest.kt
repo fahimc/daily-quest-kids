@@ -4,6 +4,7 @@ import com.dailyquestkids.core.model.ConnectionsPuzzle
 import com.dailyquestkids.core.model.DailyPuzzleSet
 import com.dailyquestkids.core.model.Hint
 import com.dailyquestkids.core.model.PuzzlePack
+import com.dailyquestkids.core.model.SpellingBeePuzzle
 import com.dailyquestkids.core.model.WordlyPuzzle
 import com.dailyquestkids.core.testing.FixturePackFactory
 import org.junit.Assert.assertFalse
@@ -181,5 +182,19 @@ class PuzzlePackValidatorTest {
         assertTrue(wordlyPuzzles.size >= 20)
         assertTrue(wordlyPuzzles.all { it.review.humanReviewed })
         assertTrue(wordlyPuzzles.map { it.solution }.toSet().size >= 20)
+    }
+
+    @Test
+    fun phasePreviewIncludesAtLeastTwentyReviewedSpellingFixtures() {
+        val spellingPuzzles =
+            FixturePackFactory
+                .phasePreviewPack()
+                .days
+                .map { day -> day.puzzles.filterIsInstance<SpellingBeePuzzle>().single() }
+
+        assertTrue(spellingPuzzles.size >= 20)
+        assertTrue(spellingPuzzles.all { it.review.humanReviewed })
+        assertTrue(spellingPuzzles.map { it.letters.joinToString("") }.toSet().size >= 20)
+        assertTrue(spellingPuzzles.all { it.targetWords.size in 8..24 })
     }
 }

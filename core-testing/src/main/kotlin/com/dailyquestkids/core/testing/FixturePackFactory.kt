@@ -15,6 +15,7 @@ import com.dailyquestkids.core.model.SpellingWord
 import com.dailyquestkids.core.model.SudokuPuzzle
 import com.dailyquestkids.core.model.WordlyPuzzle
 
+@Suppress("LargeClass")
 object FixturePackFactory {
     fun oneDayPack(): PuzzlePack =
         PuzzlePack(
@@ -43,28 +44,7 @@ object FixturePackFactory {
             puzzles =
                 listOf(
                     wordlyPuzzle(dayIndex),
-                    SpellingBeePuzzle(
-                        id = "spelling-${dayId(dayIndex)}",
-                        difficulty = Difficulty.STARTER,
-                        curriculumTags = listOf("english:vocabulary", "year:3"),
-                        hints =
-                            listOf(
-                                Hint(1, "Several words start with p."),
-                                Hint(2, "One answer has five letters."),
-                                Hint(3, "A small green plant part is a leaf."),
-                            ),
-                        review = automatedOnlyReview(),
-                        letters = listOf('p', 'l', 'a', 'n', 't', 'e', 'r'),
-                        centreLetter = 'a',
-                        targetWords =
-                            listOf(
-                                SpellingWord("plant", "A living thing that grows in soil."),
-                                SpellingWord("plan", "An idea for what to do next."),
-                                SpellingWord("part", "One piece of a whole."),
-                                SpellingWord("panel", "A flat part of a door or wall."),
-                                SpellingWord("planet", "A world that moves around a star."),
-                            ),
-                    ),
+                    spellingPuzzle(dayIndex),
                     CrosswordPuzzle(
                         id = "crossword-${dayId(dayIndex)}",
                         difficulty = Difficulty.STARTER,
@@ -215,6 +195,20 @@ object FixturePackFactory {
         )
     }
 
+    private fun spellingPuzzle(dayIndex: Int): SpellingBeePuzzle {
+        val fixture = spellingFixtures[dayIndex % spellingFixtures.size]
+        return SpellingBeePuzzle(
+            id = "spelling-${dayId(dayIndex)}",
+            difficulty = Difficulty.STARTER,
+            curriculumTags = listOf("english:vocabulary", "english:spelling", "year:3"),
+            hints = spellingHints(),
+            review = humanReview(),
+            letters = fixture.letters.toList(),
+            centreLetter = fixture.centreLetter,
+            targetWords = fixture.words.map { SpellingWord(it.word, it.definition) },
+        )
+    }
+
     private fun automatedOnlyReview(): ReviewMetadata =
         ReviewMetadata(
             automatedReviewPassed = true,
@@ -233,6 +227,14 @@ object FixturePackFactory {
     private const val SEASON_START_DATE = "2026-07-19"
 
     private const val WORDLY_FIXTURE_COUNT = 20
+
+    private fun spellingHints(): List<Hint> =
+        listOf(
+            Hint(1, "Show how many answers start with each letter."),
+            Hint(2, "Show the length of one undiscovered word."),
+            Hint(3, "Show a definition for one undiscovered word."),
+            Hint(4, "Show the first letter of one undiscovered word."),
+        )
 
     private val wordlyFixtures =
         listOf(
@@ -501,5 +503,435 @@ object FixturePackFactory {
         val morphologyNote: String? = null,
         val difficulty: Difficulty = Difficulty.STARTER,
         val yearGroup: Int = 3,
+    )
+
+    private val spellingFixtures =
+        listOf(
+            SpellingFixture(
+                letters = "planter",
+                centreLetter = 'a',
+                words =
+                    listOf(
+                        word("ant", "A small insect."),
+                        word("plan", "An idea for what to do next."),
+                        word("plant", "A living thing that grows in soil."),
+                        word("plane", "A flying vehicle with wings."),
+                        word("planet", "A world that moves around a star."),
+                        word("panel", "A flat part of a door or wall."),
+                        word("part", "One piece of a whole."),
+                        word("later", "At a time after now."),
+                        word("learn", "To find out or practise something new."),
+                        word("alert", "Ready to notice what is happening."),
+                        word("alter", "To change something."),
+                        word("rental", "Something borrowed for a time."),
+                        word("planter", "A pot or box for growing plants."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "painter",
+                centreLetter = 'i',
+                words =
+                    listOf(
+                        word("pin", "A small sharp fastener."),
+                        word("pit", "A deep hole."),
+                        word("tin", "A light metal container."),
+                        word("tip", "The pointed end of something."),
+                        word("pair", "Two things that go together."),
+                        word("pain", "A hurt feeling in the body."),
+                        word("paint", "Coloured liquid used on paper or walls."),
+                        word("rain", "Water drops falling from clouds."),
+                        word("train", "A vehicle that travels on tracks."),
+                        word("print", "To make words or pictures on paper."),
+                        word("ripe", "Ready to eat."),
+                        word("tire", "To become tired."),
+                        word("painter", "A person who paints."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "cabinet",
+                centreLetter = 'a',
+                words =
+                    listOf(
+                        word("cab", "A car that carries paying passengers."),
+                        word("can", "To be able to do something."),
+                        word("cat", "A small pet with whiskers."),
+                        word("bat", "A stick used to hit a ball."),
+                        word("ban", "To say something is not allowed."),
+                        word("ate", "Had food."),
+                        word("bean", "A seed used as food."),
+                        word("cane", "A long strong plant stem."),
+                        word("neat", "Tidy and in order."),
+                        word("cabin", "A small simple house."),
+                        word("enact", "To make a rule official."),
+                        word("antic", "A playful trick or action."),
+                        word("cabinet", "A cupboard with shelves or drawers."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "dragnet",
+                centreLetter = 'a',
+                words =
+                    listOf(
+                        word("age", "How long someone or something has lived."),
+                        word("ant", "A small insect."),
+                        word("art", "Pictures, music or other creative work."),
+                        word("ate", "Had food."),
+                        word("dare", "To be brave enough to try."),
+                        word("date", "A day on a calendar."),
+                        word("dear", "Loved or special."),
+                        word("gate", "A movable opening in a fence."),
+                        word("gear", "Equipment for an activity."),
+                        word("grade", "A mark or level."),
+                        word("grant", "To give or allow."),
+                        word("garden", "A place where plants grow."),
+                        word("danger", "Something that could cause harm."),
+                        word("dragnet", "A wide search for something."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "picture",
+                centreLetter = 'i',
+                words =
+                    listOf(
+                        word("ice", "Frozen water."),
+                        word("tie", "To fasten with a knot."),
+                        word("tip", "The pointed end of something."),
+                        word("pit", "A deep hole."),
+                        word("ripe", "Ready to eat."),
+                        word("pier", "A platform built out over water."),
+                        word("tire", "To become tired."),
+                        word("trip", "A journey to another place."),
+                        word("epic", "Very big or impressive."),
+                        word("cite", "To mention as evidence."),
+                        word("price", "How much something costs."),
+                        word("cutie", "A friendly name for someone sweet."),
+                        word("recite", "To say something from memory."),
+                        word("picture", "An image or drawing."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "helping",
+                centreLetter = 'e',
+                words =
+                    listOf(
+                        word("hen", "A female chicken."),
+                        word("pen", "A tool for writing."),
+                        word("peg", "A small pin or holder."),
+                        word("leg", "A body part used for standing."),
+                        word("eel", "A long fish."),
+                        word("heel", "The back part of a foot."),
+                        word("peel", "To take the skin off fruit."),
+                        word("help", "To make something easier for someone."),
+                        word("pile", "A stack of things."),
+                        word("pine", "A tree with needles."),
+                        word("line", "A long thin mark."),
+                        word("hinge", "The part that lets a door swing."),
+                        word("helping", "Giving support to someone."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "reading",
+                centreLetter = 'e',
+                words =
+                    listOf(
+                        word("red", "The colour of a strawberry."),
+                        word("den", "A cosy room or animal home."),
+                        word("end", "The last part."),
+                        word("age", "How long someone or something has lived."),
+                        word("ear", "A body part for hearing."),
+                        word("read", "To look at words and understand them."),
+                        word("dear", "Loved or special."),
+                        word("deer", "A gentle wild animal."),
+                        word("reed", "A tall plant that grows near water."),
+                        word("range", "A set of different amounts or types."),
+                        word("eager", "Very ready and excited."),
+                        word("garden", "A place where plants grow."),
+                        word("danger", "Something that could cause harm."),
+                        word("gained", "Got or earned something."),
+                        word("reading", "Looking at words and understanding them."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "drawing",
+                centreLetter = 'a',
+                words =
+                    listOf(
+                        word("and", "A word that joins ideas."),
+                        word("raw", "Not cooked."),
+                        word("rag", "A small piece of old cloth."),
+                        word("wag", "To move from side to side."),
+                        word("wand", "A thin stick in stories or games."),
+                        word("rang", "Made a bell sound."),
+                        word("drain", "A pipe or hole where water leaves."),
+                        word("grain", "A seed used for food."),
+                        word("grand", "Large or impressive."),
+                        word("daring", "Brave and ready to try."),
+                        word("inward", "Moving toward the inside."),
+                        word("award", "A prize for good work."),
+                        word("drawing", "A picture made with lines."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "kitchen",
+                centreLetter = 'i',
+                words =
+                    listOf(
+                        word("kit", "A set of things for a task."),
+                        word("tin", "A light metal container."),
+                        word("hit", "To strike something."),
+                        word("itch", "A tickly feeling on the skin."),
+                        word("thin", "Not thick."),
+                        word("thick", "Wide from one side to the other."),
+                        word("nice", "Kind or pleasant."),
+                        word("tick", "A small mark or clicking sound."),
+                        word("kite", "A toy flown in the wind."),
+                        word("nick", "A small cut."),
+                        word("hint", "A small clue."),
+                        word("kitten", "A young cat."),
+                        word("ethic", "An idea about doing what is right."),
+                        word("kitchen", "A room where food is prepared."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "outside",
+                centreLetter = 'i',
+                words =
+                    listOf(
+                        word("sit", "To rest on a chair or the ground."),
+                        word("tie", "To fasten with a knot."),
+                        word("die", "A cube used in games."),
+                        word("site", "A place where something is found."),
+                        word("side", "One edge or part of something."),
+                        word("tide", "The sea moving higher or lower."),
+                        word("diet", "The food someone usually eats."),
+                        word("edit", "To fix or improve writing."),
+                        word("suit", "Clothes that match, or to be right for."),
+                        word("suite", "A set of rooms."),
+                        word("suited", "Right or fitted for something."),
+                        word("duties", "Jobs that need to be done."),
+                        word("outside", "Not inside a place."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "flowers",
+                centreLetter = 'o',
+                words =
+                    listOf(
+                        word("owe", "To need to give something back."),
+                        word("low", "Not high."),
+                        word("row", "A line of things."),
+                        word("flow", "To move smoothly like water."),
+                        word("floor", "The surface you walk on inside."),
+                        word("flower", "The colourful part of many plants."),
+                        word("flowers", "More than one flower."),
+                        word("loose", "Not tight."),
+                        word("slower", "Moving with less speed."),
+                        word("lower", "Closer to the ground."),
+                        word("fowl", "A bird kept for food or eggs."),
+                        word("wolf", "A wild animal like a large dog."),
+                        word("sore", "Hurting a little."),
+                        word("lore", "Stories and knowledge passed along."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "machine",
+                centreLetter = 'a',
+                words =
+                    listOf(
+                        word("ace", "A playing card with one symbol."),
+                        word("ache", "A steady hurt."),
+                        word("each", "Every one by itself."),
+                        word("man", "A grown-up male person."),
+                        word("can", "To be able to do something."),
+                        word("came", "Arrived or moved closer."),
+                        word("main", "Most important."),
+                        word("mean", "To have a meaning."),
+                        word("mane", "Long hair on an animal's neck."),
+                        word("name", "A word for a person or thing."),
+                        word("chain", "Linked loops of metal or plastic."),
+                        word("cinema", "A place where films are shown."),
+                        word("machine", "A tool with moving parts."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "holiday",
+                centreLetter = 'o',
+                words =
+                    listOf(
+                        word("old", "Not new or young."),
+                        word("oil", "A slippery liquid."),
+                        word("idol", "A person someone admires a lot."),
+                        word("hold", "To keep in your hand or arms."),
+                        word("holy", "Special in a religious way."),
+                        word("load", "Something carried."),
+                        word("loyal", "Faithful and true."),
+                        word("alloy", "A mix of metals."),
+                        word("yoyo", "A toy that rolls up and down a string."),
+                        word("hoody", "A top with a hood."),
+                        word("holiday", "A break from school or work."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "climber",
+                centreLetter = 'i',
+                words =
+                    listOf(
+                        word("ice", "Frozen water."),
+                        word("rib", "A curved bone in the chest."),
+                        word("rim", "The edge around something round."),
+                        word("mile", "A long distance."),
+                        word("lime", "A small green fruit."),
+                        word("climb", "To go upward using hands or feet."),
+                        word("climber", "A person who climbs."),
+                        word("crime", "An action against the law."),
+                        word("relic", "An old object kept from the past."),
+                        word("crib", "A small bed for a baby."),
+                        word("rice", "Small white grains eaten as food."),
+                        word("mice", "More than one mouse."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "friends",
+                centreLetter = 'i',
+                words =
+                    listOf(
+                        word("fin", "A thin body part that helps fish swim."),
+                        word("din", "A loud confused noise."),
+                        word("rid", "To clear something away."),
+                        word("sir", "A polite word for a man."),
+                        word("sin", "A wrong action in some beliefs."),
+                        word("fir", "An evergreen tree."),
+                        word("find", "To discover something."),
+                        word("fine", "Good or well."),
+                        word("fire", "Heat and flames."),
+                        word("fried", "Cooked in hot oil."),
+                        word("fries", "Thin pieces of fried potato."),
+                        word("friend", "Someone you like and trust."),
+                        word("friends", "More than one friend."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "learning",
+                centreLetter = 'e',
+                words =
+                    listOf(
+                        word("leg", "A body part used for standing."),
+                        word("gel", "A soft jelly-like substance."),
+                        word("age", "How long someone or something has lived."),
+                        word("ear", "A body part for hearing."),
+                        word("era", "A period of time."),
+                        word("lean", "To rest at an angle."),
+                        word("learn", "To find out or practise something new."),
+                        word("real", "True or actually existing."),
+                        word("near", "Close by."),
+                        word("line", "A long thin mark."),
+                        word("reign", "The time a king or queen rules."),
+                        word("green", "The colour of grass."),
+                        word("eager", "Very ready and excited."),
+                        word("anger", "A strong upset feeling."),
+                        word("learning", "Finding out and practising new things."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "campers",
+                centreLetter = 'a',
+                words =
+                    listOf(
+                        word("arm", "A body part from shoulder to hand."),
+                        word("are", "A form of the word be."),
+                        word("cap", "A soft hat."),
+                        word("car", "A road vehicle."),
+                        word("map", "A drawing that shows places."),
+                        word("mare", "A female horse."),
+                        word("care", "Kind attention or help."),
+                        word("pace", "Speed of movement."),
+                        word("camp", "A place to sleep outdoors."),
+                        word("camps", "More than one camp."),
+                        word("spare", "Extra or not being used."),
+                        word("space", "An empty area or the sky beyond Earth."),
+                        word("camper", "A person who camps."),
+                        word("campers", "People who camp."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "blanket",
+                centreLetter = 'a',
+                words =
+                    listOf(
+                        word("ant", "A small insect."),
+                        word("ate", "Had food."),
+                        word("bat", "A stick used to hit a ball."),
+                        word("ban", "To say something is not allowed."),
+                        word("bean", "A seed used as food."),
+                        word("bake", "To cook in an oven."),
+                        word("lake", "A large area of water."),
+                        word("lane", "A narrow road or path."),
+                        word("lean", "To rest at an angle."),
+                        word("ankle", "The joint above the foot."),
+                        word("tank", "A large container for liquid."),
+                        word("taken", "Carried or moved away."),
+                        word("bleak", "Cold, bare or gloomy."),
+                        word("blanket", "A warm cover used on a bed."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "monster",
+                centreLetter = 'o',
+                words =
+                    listOf(
+                        word("one", "The number 1."),
+                        word("ton", "A very heavy amount."),
+                        word("not", "A word that makes a statement negative."),
+                        word("toe", "A small part at the end of a foot."),
+                        word("too", "Also, or more than needed."),
+                        word("soon", "After a short time."),
+                        word("moon", "The round object seen in the night sky."),
+                        word("more", "A larger amount."),
+                        word("some", "An amount that is not exact."),
+                        word("sort", "A type or kind."),
+                        word("rose", "A flower with a sweet smell."),
+                        word("stone", "A small piece of rock."),
+                        word("store", "A place where things are kept or sold."),
+                        word("storm", "Bad weather with strong wind or rain."),
+                        word("monster", "A made-up scary creature from stories."),
+                    ),
+            ),
+            SpellingFixture(
+                letters = "travels",
+                centreLetter = 'a',
+                words =
+                    listOf(
+                        word("ate", "Had food."),
+                        word("are", "A form of the word be."),
+                        word("art", "Pictures, music or other creative work."),
+                        word("rat", "A small animal with a long tail."),
+                        word("star", "A bright object in the night sky."),
+                        word("start", "To begin."),
+                        word("stale", "No longer fresh."),
+                        word("steal", "To take something that is not yours."),
+                        word("later", "At a time after now."),
+                        word("least", "The smallest amount."),
+                        word("alert", "Ready to notice what is happening."),
+                        word("alter", "To change something."),
+                        word("travel", "To go from one place to another."),
+                        word("travels", "Goes from one place to another."),
+                    ),
+            ),
+        )
+
+    private fun word(
+        text: String,
+        definition: String,
+    ): SpellingWordFixture = SpellingWordFixture(text, definition)
+
+    private data class SpellingFixture(
+        val letters: String,
+        val centreLetter: Char,
+        val words: List<SpellingWordFixture>,
+    )
+
+    private data class SpellingWordFixture(
+        val word: String,
+        val definition: String,
     )
 }

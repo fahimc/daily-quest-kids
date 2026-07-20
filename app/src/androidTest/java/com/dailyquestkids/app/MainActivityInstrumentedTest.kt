@@ -51,6 +51,17 @@ class MainActivityInstrumentedTest {
     }
 
     @Test
+    fun spellingBCardOpensPlayableGame() {
+        openHomeFromAnyLaunchState()
+
+        compose.onNodeWithText("Spelling B").assertIsDisplayed().performClick()
+
+        compose.waitUntilAtLeastOneExists(hasTestTag("spellingScreen"), 3_000L)
+        compose.onNodeWithTag("spellingHoneycomb").assertIsDisplayed()
+        compose.onNodeWithTag("spellingSubmitButton").assertIsDisplayed()
+    }
+
+    @Test
     fun achievementsTabOpensFromBottomNavigation() {
         openHomeFromAnyLaunchState()
 

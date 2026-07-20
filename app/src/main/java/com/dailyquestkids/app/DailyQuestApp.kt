@@ -65,6 +65,7 @@ import com.dailyquestkids.core.design.categoryStyle
 import com.dailyquestkids.core.model.Puzzle
 import com.dailyquestkids.core.model.PuzzleCategory
 import com.dailyquestkids.core.model.PuzzleStatus
+import com.dailyquestkids.core.model.SpellingBeePuzzle
 import com.dailyquestkids.core.model.WordlyPuzzle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -194,48 +195,74 @@ private fun MainQuestScaffold(
             composable("puzzle/{puzzleId}") { entry ->
                 val puzzleId = entry.arguments?.getString("puzzleId").orEmpty()
                 val puzzle = coordinator.puzzleById(puzzleId)
-                if (puzzle is WordlyPuzzle) {
-                    WordlyRoute(
-                        data =
-                            WordlyRouteData(
-                                puzzle = puzzle,
-                                settings = settings,
-                                homeState = homeState,
-                            ),
-                        dependencies =
-                            WordlyRouteDependencies(
-                                progressStore = container.progressStore,
-                                wordlyProgressStore = container.wordlyProgressStore,
-                                dayIndex = homeState.globalDayNumber - 1,
-                                todaysPuzzleIds = coordinator.currentPuzzleIds(),
-                            ),
-                        onBack = { navController.popBackStack() },
-                        onReturnHome = {
-                            navController.navigate(Route.Home.path) {
-                                popUpTo(Route.Home.path) { inclusive = true }
-                            }
-                        },
-                    )
-                } else {
-                    PuzzlePreviewScreen(
-                        puzzle = puzzle,
-                        status = progress.statusFor(puzzleId),
-                        onBack = { navController.popBackStack() },
-                        onComplete = {
-                            if (puzzle != null) {
-                                scope.launch {
-                                    container.progressStore.markCompleted(
-                                        puzzleId = puzzle.id,
-                                        dayIndex = homeState.globalDayNumber - 1,
-                                        todaysPuzzleIds = coordinator.currentPuzzleIds(),
-                                    )
-                                    navController.navigate(Route.Home.path) {
-                                        popUpTo(Route.Home.path) { inclusive = true }
+                when (puzzle) {
+                    is WordlyPuzzle -> {
+                        WordlyRoute(
+                            data =
+                                WordlyRouteData(
+                                    puzzle = puzzle,
+                                    settings = settings,
+                                    homeState = homeState,
+                                ),
+                            dependencies =
+                                WordlyRouteDependencies(
+                                    progressStore = container.progressStore,
+                                    wordlyProgressStore = container.wordlyProgressStore,
+                                    dayIndex = homeState.globalDayNumber - 1,
+                                    todaysPuzzleIds = coordinator.currentPuzzleIds(),
+                                ),
+                            onBack = { navController.popBackStack() },
+                            onReturnHome = {
+                                navController.navigate(Route.Home.path) {
+                                    popUpTo(Route.Home.path) { inclusive = true }
+                                }
+                            },
+                        )
+                    }
+                    is SpellingBeePuzzle -> {
+                        SpellingBRoute(
+                            data =
+                                SpellingBRouteData(
+                                    puzzle = puzzle,
+                                    settings = settings,
+                                    homeState = homeState,
+                                ),
+                            dependencies =
+                                SpellingBRouteDependencies(
+                                    progressStore = container.progressStore,
+                                    spellingProgressStore = container.spellingProgressStore,
+                                    dayIndex = homeState.globalDayNumber - 1,
+                                    todaysPuzzleIds = coordinator.currentPuzzleIds(),
+                                ),
+                            onBack = { navController.popBackStack() },
+                            onReturnHome = {
+                                navController.navigate(Route.Home.path) {
+                                    popUpTo(Route.Home.path) { inclusive = true }
+                                }
+                            },
+                        )
+                    }
+                    else -> {
+                        PuzzlePreviewScreen(
+                            puzzle = puzzle,
+                            status = progress.statusFor(puzzleId),
+                            onBack = { navController.popBackStack() },
+                            onComplete = {
+                                if (puzzle != null) {
+                                    scope.launch {
+                                        container.progressStore.markCompleted(
+                                            puzzleId = puzzle.id,
+                                            dayIndex = homeState.globalDayNumber - 1,
+                                            todaysPuzzleIds = coordinator.currentPuzzleIds(),
+                                        )
+                                        navController.navigate(Route.Home.path) {
+                                            popUpTo(Route.Home.path) { inclusive = true }
+                                        }
                                     }
                                 }
-                            }
-                        },
-                    )
+                            },
+                        )
+                    }
                 }
             }
         }
@@ -1407,7 +1434,7 @@ private fun HowToPlayScreen(onBack: () -> Unit) {
         )
         QuestPanel {
             Text("Today", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text("Wordly is fully playable. The other daily lands show previews while their full engines are being built.")
+            Text("Wordly and Spelling B are fully playable. The other daily lands show previews while their full engines are being built.")
         }
         Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
             Text("Back")
