@@ -103,6 +103,7 @@ class ProgressStore(
                         .orEmpty()
                         .mapNotNull { it.toIntOrNull() }
                         .toSet(),
+                hintsUsedByPuzzle = preferences[Keys.HINTS_USED_BY_PUZZLE].orEmpty().toHintMap(),
             )
         }
 
@@ -124,14 +125,17 @@ class ProgressStore(
         puzzleId: String,
         dayIndex: Int,
         todaysPuzzleIds: Set<String>,
+        hintsUsed: Int = 0,
     ) {
         context.questDataStore.edit { preferences ->
             val started = preferences[Keys.STARTED_PUZZLES].orEmpty()
             val completed = preferences[Keys.COMPLETED_PUZZLES].orEmpty() + puzzleId
             val failed = preferences[Keys.FAILED_PUZZLES].orEmpty() - puzzleId
+            val hints = preferences[Keys.HINTS_USED_BY_PUZZLE].orEmpty().toHintMap()
             preferences[Keys.STARTED_PUZZLES] = started + puzzleId
             preferences[Keys.COMPLETED_PUZZLES] = completed
             preferences[Keys.FAILED_PUZZLES] = failed
+            preferences[Keys.HINTS_USED_BY_PUZZLE] = (hints + (puzzleId to hintsUsed.coerceAtLeast(0))).toHintSet()
 
             if (todaysPuzzleIds.isNotEmpty() && todaysPuzzleIds.all { it in completed }) {
                 val days = preferences[Keys.DAILY_FIVE_DAYS].orEmpty()
@@ -155,6 +159,7 @@ class ProgressStore(
             preferences.remove(Keys.COMPLETED_PUZZLES)
             preferences.remove(Keys.FAILED_PUZZLES)
             preferences.remove(Keys.DAILY_FIVE_DAYS)
+            preferences.remove(Keys.HINTS_USED_BY_PUZZLE)
             preferences.remove(Keys.GREATEST_DAY_OBSERVED)
             preferences
                 .asMap()
@@ -344,6 +349,7 @@ private object Keys {
     val COMPLETED_PUZZLES = stringSetPreferencesKey("completed_puzzle_ids")
     val FAILED_PUZZLES = stringSetPreferencesKey("failed_puzzle_ids")
     val DAILY_FIVE_DAYS = stringSetPreferencesKey("daily_five_days")
+    val HINTS_USED_BY_PUZZLE = stringSetPreferencesKey("hints_used_by_puzzle")
     const val WORDLY_STATE_PREFIX = "wordly_state_"
     const val SPELLING_STATE_PREFIX = "spelling_state_"
     const val CROSSWORD_STATE_PREFIX = "crossword_state_"
@@ -360,3 +366,18 @@ private object Keys {
 
     fun connectionsState(puzzleId: String): Preferences.Key<String> = stringPreferencesKey("$CONNECTIONS_STATE_PREFIX$puzzleId")
 }
+
+private fun Set<String>.toHintMap(): Map<String, Int> =
+    mapNotNull { entry ->
+        val parts = entry.split(":", limit = 2)
+        val puzzleId = parts.getOrNull(0).orEmpty()
+        val hintsUsed = parts.getOrNull(1)?.toIntOrNull()
+        if (puzzleId.isBlank() || hintsUsed == null) {
+            null
+        } else {
+            puzzleId to hintsUsed.coerceAtLeast(0)
+        }
+    }.toMap()
+
+private fun Map<String, Int>.toHintSet(): Set<String> =
+    entries.map { (puzzleId, hintsUsed) -> "$puzzleId:${hintsUsed.coerceAtLeast(0)}" }.toSet()

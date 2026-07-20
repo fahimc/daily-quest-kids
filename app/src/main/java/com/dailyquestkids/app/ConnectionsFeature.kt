@@ -137,6 +137,7 @@ private suspend fun handleConnectionsCompletion(
         puzzleId = event.puzzleId,
         dayIndex = dependencies.dayIndex,
         todaysPuzzleIds = dependencies.todaysPuzzleIds,
+        hintsUsed = event.hintsUsed,
     )
     dependencies.connectionsProgressStore.save(ConnectionsGameEngine.acknowledgeCompletion(resultState))
 }

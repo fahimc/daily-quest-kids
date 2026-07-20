@@ -152,6 +152,7 @@ private suspend fun handleSpellingCompletion(
         puzzleId = event.puzzleId,
         dayIndex = dependencies.dayIndex,
         todaysPuzzleIds = dependencies.todaysPuzzleIds,
+        hintsUsed = event.hintsUsed,
     )
     dependencies.spellingProgressStore.save(SpellingBGameEngine.acknowledgeCompletion(resultState))
 }

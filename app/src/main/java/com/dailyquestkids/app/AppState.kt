@@ -24,6 +24,7 @@ data class StoredProgress(
     val completedPuzzleIds: Set<String> = emptySet(),
     val failedPuzzleIds: Set<String> = emptySet(),
     val dailyFiveCompletedDays: Set<Int> = emptySet(),
+    val hintsUsedByPuzzle: Map<String, Int> = emptyMap(),
 ) {
     fun statusFor(puzzleId: String): PuzzleStatus =
         when {
@@ -42,11 +43,53 @@ data class DailyHomeUiState(
     val currentDailyFiveStreak: Int,
     val bestDailyFiveStreak: Int,
     val perfectDayCount: Int,
+    val longestHistoricalStreak: Int,
     val cards: List<QuestCardUiState>,
+    val categoryStreaks: List<CategoryStreakUiState>,
+    val historyDays: List<HistoryDayUiState>,
+    val achievements: List<AchievementBadgeUiState>,
     val message: String,
+    val comebackMessage: String,
 ) {
     val isDailyFiveComplete: Boolean = completedCount == cards.size && cards.isNotEmpty()
 }
+
+data class CategoryStreakUiState(
+    val category: PuzzleCategory,
+    val title: String,
+    val currentStreak: Int,
+    val bestStreak: Int,
+    val totalSolved: Int,
+    val hintsUsed: Int,
+    val hintFreeCompletions: Int,
+    val lastSolvedDayIndex: Int?,
+)
+
+data class HistoryDayUiState(
+    val dayIndex: Int,
+    val globalDayNumber: Int,
+    val label: String,
+    val completedCount: Int,
+    val totalCount: Int,
+    val state: HistoryDayState,
+    val isToday: Boolean,
+)
+
+enum class HistoryDayState {
+    NO_ACTIVITY,
+    PARTIAL,
+    PERFECT,
+    FUTURE,
+}
+
+data class AchievementBadgeUiState(
+    val id: String,
+    val title: String,
+    val description: String,
+    val unlocked: Boolean,
+    val progressText: String,
+    val category: PuzzleCategory? = null,
+)
 
 data class QuestCardUiState(
     val puzzle: Puzzle,

@@ -135,6 +135,7 @@ private suspend fun handleCompletion(
                 puzzleId = event.puzzleId,
                 dayIndex = dependencies.dayIndex,
                 todaysPuzzleIds = dependencies.todaysPuzzleIds,
+                hintsUsed = event.hintsUsed,
             )
         WordlyOutcome.FAILURE -> dependencies.progressStore.markFailed(event.puzzleId)
     }

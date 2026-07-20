@@ -65,6 +65,15 @@
 - Added Connections engine, validator, UI mapper and instrumented visual/play
   tests covering initial, selected, solved, hinted, failed, completed and
   interactive play states.
+- Expanded Daily Home streaks with daily history, category streak tracking,
+  comeback messaging and unlockable achievement badges.
+- Added secure Daily Five share-card preview, cache rendering, gallery save and
+  Android share intent support through FileProvider without answer leakage.
+- Added a deterministic content pipeline module that exports the preview season
+  pack, SHA-256 checksum, JSON validation summary, CSV puzzle index and HTML
+  report.
+- Verified the generated preview pack covers 20 days and 100 puzzles with a
+  passing validator report.
 
 ## Phase 0
 
@@ -85,3 +94,8 @@
 
 - Status: Wordly is implemented and local non-device tests pass; device/emulator
   execution for screenshot/VRT tests is still pending.
+
+## Phases 11-13
+
+- Status: streak history, achievements, secure sharing and deterministic content
+  export/reporting are implemented for the preview season.

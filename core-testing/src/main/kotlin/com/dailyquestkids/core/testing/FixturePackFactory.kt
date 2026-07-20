@@ -701,8 +701,8 @@ object FixturePackFactory {
             ),
             connectionsFixture(
                 cg("Transport", "Ways people can travel.", "bus", "bike", "ship", "taxi"),
-                cg("Book parts", "Parts of a book.", "cover", "page", "chapter", "title"),
-                cg("Tree parts", "Parts of a tree or plant.", "root", "trunk", "branch", "bark"),
+                cg("Book pages", "Pieces of a book.", "cover", "page", "chapter", "title"),
+                cg("Tree features", "Pieces of a tree or plant.", "root", "trunk", "branch", "bark"),
                 cg("Sports gear", "Things used in games and sport.", "ball", "bat", "goal", "net"),
             ),
             connectionsFixture(
@@ -1115,7 +1115,7 @@ object FixturePackFactory {
                     ),
             ),
             SpellingFixture(
-                letters = "learning",
+                letters = "learnig",
                 centreLetter = 'e',
                 words =
                     listOf(

@@ -1,5 +1,6 @@
 package com.dailyquestkids.app
 
+import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -44,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -67,6 +69,7 @@ import com.dailyquestkids.core.model.CrosswordPuzzle
 import com.dailyquestkids.core.model.Puzzle
 import com.dailyquestkids.core.model.PuzzleCategory
 import com.dailyquestkids.core.model.PuzzleStatus
+import com.dailyquestkids.core.model.ShareCardModel
 import com.dailyquestkids.core.model.SpellingBeePuzzle
 import com.dailyquestkids.core.model.SudokuPuzzle
 import com.dailyquestkids.core.model.WordlyPuzzle
@@ -139,6 +142,8 @@ private fun MainQuestScaffold(
             ?.route ?: Route.Home.path
     val showBottomBar = currentRoute in setOf(Route.Home.path, Route.Streaks.path, Route.Achievements.path, Route.Settings.path)
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val shareActions = remember(context) { ShareActions(context) }
     val settingsActions =
         remember(container, navController, scope) {
             SettingsActions(
@@ -175,6 +180,7 @@ private fun MainQuestScaffold(
                     },
                     onOpenHowToPlay = { navController.navigate(Route.HowToPlay.path) },
                     onOpenParentInfo = { navController.navigate(Route.ParentInfo.path) },
+                    shareActions = shareActions,
                 )
             }
             composable(Route.Streaks.path) {
@@ -392,6 +398,26 @@ private class SettingsActions(
     }
 }
 
+internal class ShareActions(
+    private val context: android.content.Context,
+) {
+    fun share(model: ShareCardModel) {
+        runCatching { ShareCardRenderer.share(context, model) }
+            .onFailure {
+                Toast.makeText(context, "Share card could not be opened.", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    fun save(model: ShareCardModel) {
+        runCatching { ShareCardRenderer.saveToPictures(context, model) }
+            .onSuccess {
+                Toast.makeText(context, "Share card saved.", Toast.LENGTH_SHORT).show()
+            }.onFailure {
+                Toast.makeText(context, "Share card could not be saved.", Toast.LENGTH_SHORT).show()
+            }
+    }
+}
+
 @Composable
 private fun SplashScreen() {
     QuestSceneFrame(testTag = "splashScreen") { metrics ->
@@ -545,13 +571,18 @@ private fun HomeScreen(
     onOpenPuzzle: (QuestCardUiState) -> Unit,
     onOpenHowToPlay: () -> Unit,
     onOpenParentInfo: () -> Unit,
+    shareActions: ShareActions,
 ) {
     var showComplete by remember(state.globalDayNumber, state.isDailyFiveComplete) {
         mutableStateOf(state.isDailyFiveComplete)
     }
 
     if (state.isDailyFiveComplete && showComplete) {
-        DailyFiveCelebration(state = state, onDone = { showComplete = false })
+        DailyFiveCelebration(
+            state = state,
+            shareActions = shareActions,
+            onDone = { showComplete = false },
+        )
     } else {
         QuestHomeDashboard(
             state = state,
@@ -988,8 +1019,27 @@ private fun PuzzlePreviewScreen(
 @Composable
 private fun DailyFiveCelebration(
     state: DailyHomeUiState,
+    shareActions: ShareActions,
     onDone: () -> Unit,
 ) {
+    var sharePreview by remember { mutableStateOf(false) }
+    val shareModel = remember(state) { ShareCardFactory.dailyFive(state) }
+
+    if (sharePreview) {
+        SharePreviewDialog(
+            model = shareModel,
+            onShare = {
+                sharePreview = false
+                shareActions.share(shareModel)
+            },
+            onSave = {
+                sharePreview = false
+                shareActions.save(shareModel)
+            },
+            onDismiss = { sharePreview = false },
+        )
+    }
+
     QuestSceneFrame(testTag = "dailyFiveCompleteScreen") { metrics ->
         Box(
             modifier =
@@ -1058,8 +1108,26 @@ private fun DailyFiveCelebration(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(metrics.gap),
             ) {
-                QuestActionButton("Share", Color(0xFF168CE4), Modifier.weight(1f).height((58f * metrics.scale).dp)) {}
-                QuestActionButton("Save", Color(0xFF4DBC43), Modifier.weight(1f).height((58f * metrics.scale).dp)) {}
+                QuestActionButton(
+                    "Share",
+                    Color(0xFF168CE4),
+                    Modifier
+                        .weight(1f)
+                        .height((58f * metrics.scale).dp)
+                        .testTag("dailyFiveShareButton"),
+                ) {
+                    sharePreview = true
+                }
+                QuestActionButton(
+                    "Save",
+                    Color(0xFF4DBC43),
+                    Modifier
+                        .weight(1f)
+                        .height((58f * metrics.scale).dp)
+                        .testTag("dailyFiveSaveButton"),
+                ) {
+                    sharePreview = true
+                }
                 QuestActionButton("Done", Color(0xFFFFA40E), Modifier.weight(1f).height((58f * metrics.scale).dp), onDone)
             }
             Text(
@@ -1124,6 +1192,59 @@ private fun CompletionIconStrip(
             }
         }
     }
+}
+
+@Composable
+private fun SharePreviewDialog(
+    model: ShareCardModel,
+    onShare: () -> Unit,
+    onSave: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Share preview") },
+        text = {
+            Column(
+                modifier = Modifier.testTag("sharePreviewDialog"),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color(0xFFE8F7FF),
+                    border = BorderStroke(1.dp, Color(0xFF0C65B8)),
+                    shape = RoundedCornerShape(16.dp),
+                ) {
+                    Column(
+                        modifier = Modifier.padding(14.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(model.brand, fontWeight = FontWeight.Black, color = Color(0xFF06386D))
+                        Text(model.utcDate, color = Color(0xFF334155))
+                        Text(model.visibleResultPattern, textAlign = TextAlign.Center, fontWeight = FontWeight.Bold)
+                    }
+                }
+                Text("Ask a grown-up before sharing outside the app.")
+                Text("Answers and personal details are hidden.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onShare, modifier = Modifier.testTag("sharePreviewShare")) {
+                Text("Share")
+            }
+        },
+        dismissButton = {
+            Row {
+                TextButton(onClick = onSave, modifier = Modifier.testTag("sharePreviewSave")) {
+                    Text("Save")
+                }
+                TextButton(onClick = onDismiss, modifier = Modifier.testTag("sharePreviewCancel")) {
+                    Text("Cancel")
+                }
+            }
+        },
+    )
 }
 
 @Composable
@@ -1239,11 +1360,17 @@ private fun StreakScreen(
             Text("Daily Five", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text("Current streak: ${state.currentDailyFiveStreak}")
             Text("Best streak: ${state.bestDailyFiveStreak}")
+            Text("Longest run: ${state.longestHistoricalStreak}")
             Text("Perfect days: ${state.perfectDayCount}")
             Text("Total puzzles solved: ${progress.completedPuzzleIds.size}")
+            Text(state.comebackMessage, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Text("Calendar")
-        MonthPreview(state)
+        Text("Recent history", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        HistoryPreview(state)
+        Text("Puzzle lands", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        state.categoryStreaks.forEach { category ->
+            CategoryStreakRow(category)
+        }
     }
 }
 
@@ -1254,41 +1381,120 @@ private fun AchievementsScreen(
 ) {
     ScreenColumn {
         Text("Achievements", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        QuestPanel {
-            Text("Daily Five Badges", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            Text("Perfect days: ${state.perfectDayCount}")
-            Text("Best daily streak: ${state.bestDailyFiveStreak}")
-            Text("Total puzzles solved: ${progress.completedPuzzleIds.size}")
+        Text(
+            "Badges unlock from calm progress, streaks and hint-free solves.",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        state.achievements.forEach { badge ->
+            AchievementBadgeRow(badge)
         }
-        QuestPanel {
-            Text("Puzzle Lands", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-            state.cards.forEach { card ->
-                Text("${card.title}: ${card.categoryStreak} completed")
-            }
+        Text("Solved so far: ${progress.completedPuzzleIds.size}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun HistoryPreview(state: DailyHomeUiState) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        state.historyDays.forEach { day ->
+            HistoryDayCell(day)
         }
     }
 }
 
 @Composable
-private fun MonthPreview(state: DailyHomeUiState) {
-    val cells = (1..7).toList()
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        cells.forEach { day ->
-            val filled = day <= state.completedCount
-            Box(
+private fun HistoryDayCell(day: HistoryDayUiState) {
+    val background =
+        when (day.state) {
+            HistoryDayState.PERFECT -> Color(0xFF72C73E)
+            HistoryDayState.PARTIAL -> Color(0xFFFFD15C)
+            HistoryDayState.FUTURE -> MaterialTheme.colorScheme.surfaceVariant
+            HistoryDayState.NO_ACTIVITY -> Color.White
+        }
+    val border =
+        if (day.isToday) {
+            BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+        } else {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        }
+    Surface(
+        modifier = Modifier.size(46.dp).testTag("historyDay-${day.globalDayNumber}"),
+        color = background,
+        border = border,
+        shape = RoundedCornerShape(10.dp),
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(day.globalDayNumber.toString(), fontWeight = FontWeight.Black, fontSize = 14.sp)
+            Text("${day.completedCount}/${day.totalCount}", fontWeight = FontWeight.Bold, fontSize = 10.sp)
+        }
+    }
+}
+
+@Composable
+private fun CategoryStreakRow(category: CategoryStreakUiState) {
+    val style = categoryStyle(category.category)
+    Surface(
+        modifier = Modifier.fillMaxWidth().testTag("categoryStreak-${category.category.name}"),
+        color = Color.White.copy(alpha = 0.96f),
+        border = BorderStroke(1.dp, style.border),
+        shape = RoundedCornerShape(16.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            QuestIconTile(
+                category = category.category,
                 modifier =
                     Modifier
-                        .size(38.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (filled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center,
-            ) {
+                        .size(48.dp),
+                scale = 1f,
+            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(category.title, fontWeight = FontWeight.Black, color = style.accent)
+                Text("Current ${category.currentStreak} • Best ${category.bestStreak}")
                 Text(
-                    text = day.toString(),
-                    color = if (filled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Bold,
+                    "Solved ${category.totalSolved} • Hint-free ${category.hintFreeCompletions}",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontSize = 12.sp,
                 )
             }
+            QuestPill("${category.hintsUsed} hints", scale = 0.9f)
+        }
+    }
+}
+
+@Composable
+private fun AchievementBadgeRow(badge: AchievementBadgeUiState) {
+    val accent = badge.category?.let { categoryStyle(it).accent } ?: Color(0xFF0C65B8)
+    Surface(
+        modifier = Modifier.fillMaxWidth().testTag("achievement-${badge.id}"),
+        color = if (badge.unlocked) Color.White.copy(alpha = 0.96f) else MaterialTheme.colorScheme.surfaceVariant,
+        border = BorderStroke(1.dp, if (badge.unlocked) accent else MaterialTheme.colorScheme.outlineVariant),
+        shape = RoundedCornerShape(16.dp),
+    ) {
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Surface(
+                modifier = Modifier.size(44.dp),
+                color = if (badge.unlocked) accent else Color(0xFFB6C3D2),
+                shape = CircleShape,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(if (badge.unlocked) "★" else "?", color = Color.White, fontWeight = FontWeight.Black)
+                }
+            }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(badge.title, fontWeight = FontWeight.Black, color = if (badge.unlocked) accent else Color(0xFF475569))
+                Text(badge.description)
+            }
+            QuestPill(badge.progressText, scale = 0.9f)
         }
     }
 }

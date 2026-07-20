@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.waitUntilAtLeastOneExists
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -100,8 +101,21 @@ class MainActivityInstrumentedTest {
 
         compose.onNodeWithText("Achievements").assertIsDisplayed().performClick()
 
-        compose.waitUntilAtLeastOneExists(hasText("Daily Five Badges"), 3_000L)
-        compose.onNodeWithText("Puzzle Lands").assertIsDisplayed()
+        compose.waitUntilAtLeastOneExists(hasText("First Step"), 3_000L)
+        compose.onNodeWithTag("achievement-ten-puzzles").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("achievement-hint-free").performScrollTo().assertIsDisplayed()
+    }
+
+    @Test
+    fun streaksTabShowsHistoryAndCategoryRows() {
+        openHomeFromAnyLaunchState()
+
+        compose.onNodeWithText("Streaks").assertIsDisplayed().performClick()
+
+        compose.waitUntilAtLeastOneExists(hasText("Recent history"), 3_000L)
+        compose.onNodeWithText("Puzzle lands").assertIsDisplayed()
+        compose.onNodeWithTag("categoryStreak-WORDLY").assertIsDisplayed()
+        compose.onNodeWithTag("historyDay-1").assertIsDisplayed()
     }
 
     private fun openHomeFromAnyLaunchState() {
