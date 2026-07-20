@@ -45,6 +45,14 @@
   clue answer leakage.
 - Added Crossword engine, validator, UI mapper, responsive layout and
   instrumented visual/play-through tests, including short-phone fit checks.
+- Completed the Sudoku feature with a reusable 6x6 engine, responsive Compose
+  screen, row/column/region highlighting, pencil notes, eraser, undo/redo,
+  mistake checking, hints, autosave, completion and share-safe result handling.
+- Expanded preview content to 20 human-reviewed 6x6 Sudoku fixtures and
+  hardened validation for row, column, region, given/solution and uniqueness
+  rules.
+- Added Sudoku engine, validator, UI mapper and instrumented visual/play-through
+  tests for initial, selected, notes, conflict, hint and completion states.
 
 ## Phase 0
 

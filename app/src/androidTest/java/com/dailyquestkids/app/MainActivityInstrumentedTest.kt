@@ -73,6 +73,17 @@ class MainActivityInstrumentedTest {
     }
 
     @Test
+    fun sudokuCardOpensPlayableGame() {
+        openHomeFromAnyLaunchState()
+
+        compose.onNodeWithText("Sudoku").assertIsDisplayed().performClick()
+
+        compose.waitUntilAtLeastOneExists(hasTestTag("sudokuScreen"), 3_000L)
+        compose.onNodeWithTag("sudokuBoard").assertIsDisplayed()
+        compose.onNodeWithTag("sudokuNumberPad").assertIsDisplayed()
+    }
+
+    @Test
     fun achievementsTabOpensFromBottomNavigation() {
         openHomeFromAnyLaunchState()
 

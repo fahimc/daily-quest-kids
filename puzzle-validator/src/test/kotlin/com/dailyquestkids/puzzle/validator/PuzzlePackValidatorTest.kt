@@ -8,6 +8,7 @@ import com.dailyquestkids.core.model.DailyPuzzleSet
 import com.dailyquestkids.core.model.Hint
 import com.dailyquestkids.core.model.PuzzlePack
 import com.dailyquestkids.core.model.SpellingBeePuzzle
+import com.dailyquestkids.core.model.SudokuPuzzle
 import com.dailyquestkids.core.model.WordlyPuzzle
 import com.dailyquestkids.core.testing.FixturePackFactory
 import org.junit.Assert.assertFalse
@@ -217,6 +218,68 @@ class PuzzlePackValidatorTest {
     }
 
     @Test
+    fun phasePreviewIncludesAtLeastTwentyReviewedSudokuFixtures() {
+        val sudokuPuzzles =
+            FixturePackFactory
+                .phasePreviewPack()
+                .days
+                .map { day -> day.puzzles.filterIsInstance<SudokuPuzzle>().single() }
+
+        assertTrue(sudokuPuzzles.size >= 20)
+        assertTrue(sudokuPuzzles.all { it.review.humanReviewed })
+        assertTrue(sudokuPuzzles.map { it.solution.joinToString("") }.toSet().size >= 20)
+        assertTrue(sudokuPuzzles.all { puzzle -> puzzle.givens.count { it == 0 } == 6 })
+    }
+
+    @Test
+    fun sudokuGivensMustMatchSolution() {
+        val original = FixturePackFactory.oneDayPack()
+        val day = original.days.single()
+        val sudoku = day.puzzles.filterIsInstance<SudokuPuzzle>().single()
+        val brokenSudoku =
+            sudoku.copy(
+                givens =
+                    sudoku.givens.mapIndexed { index, value ->
+                        if (index == 1) (value % 6) + 1 else value
+                    },
+            )
+        val report = validator.validate(replacePuzzle(original, sudoku.id, brokenSudoku))
+
+        assertFalse(report.passed)
+        assertTrue(report.errors.any { it.contains("givens must match solution") })
+    }
+
+    @Test
+    fun sudokuInvalidRegionsAreRejected() {
+        val original = FixturePackFactory.oneDayPack()
+        val day = original.days.single()
+        val sudoku = day.puzzles.filterIsInstance<SudokuPuzzle>().single()
+        val brokenSudoku =
+            sudoku.copy(
+                solution =
+                    sudoku.solution.mapIndexed { index, value ->
+                        if (index == 0) sudoku.solution[1] else value
+                    },
+            )
+        val report = validator.validate(replacePuzzle(original, sudoku.id, brokenSudoku))
+
+        assertFalse(report.passed)
+        assertTrue(report.errors.any { it.contains("solution grid is invalid") })
+    }
+
+    @Test
+    fun sudokuNonUniqueGivensAreRejected() {
+        val original = FixturePackFactory.oneDayPack()
+        val day = original.days.single()
+        val sudoku = day.puzzles.filterIsInstance<SudokuPuzzle>().single()
+        val brokenSudoku = sudoku.copy(givens = List(36) { 0 })
+        val report = validator.validate(replacePuzzle(original, sudoku.id, brokenSudoku))
+
+        assertFalse(report.passed)
+        assertTrue(report.errors.any { it.contains("exactly one solution") })
+    }
+
+    @Test
     fun crosswordCrossingConflictsAreRejected() {
         val original = FixturePackFactory.oneDayPack()
         val day = original.days.single()
@@ -292,4 +355,21 @@ class PuzzlePackValidatorTest {
         assertFalse(report.passed)
         assertTrue(report.errors.any { it.contains("must connect") })
     }
+
+    private fun replacePuzzle(
+        original: PuzzlePack,
+        puzzleId: String,
+        replacement: com.dailyquestkids.core.model.Puzzle,
+    ): PuzzlePack =
+        original.copy(
+            days =
+                original.days.map { day ->
+                    day.copy(
+                        puzzles =
+                            day.puzzles.map { puzzle ->
+                                if (puzzle.id == puzzleId) replacement else puzzle
+                            },
+                    )
+                },
+        )
 }

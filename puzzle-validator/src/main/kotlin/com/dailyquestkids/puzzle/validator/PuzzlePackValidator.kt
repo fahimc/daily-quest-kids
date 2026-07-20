@@ -171,8 +171,17 @@ class PuzzlePackValidator(
     ) {
         if (puzzle.givens.size != SUDOKU_CELL_COUNT) errors += "${puzzle.id} givens must contain $SUDOKU_CELL_COUNT cells"
         if (puzzle.solution.size != SUDOKU_CELL_COUNT) errors += "${puzzle.id} solution must contain $SUDOKU_CELL_COUNT cells"
+        if (puzzle.givens.any { it !in 0..SUDOKU_SIZE }) errors += "${puzzle.id} givens values must be 0 through $SUDOKU_SIZE"
         if (puzzle.solution.any { it !in 1..6 }) errors += "${puzzle.id} solution values must be 1 through 6"
-        if (!hasValidCompletedSudokuRows(puzzle.solution)) errors += "${puzzle.id} solution rows are invalid"
+        if (!hasValidCompletedSudoku(puzzle.solution)) errors += "${puzzle.id} solution grid is invalid"
+        if (!sudokuGivensMatchSolution(puzzle)) errors += "${puzzle.id} givens must match solution"
+        if (puzzle.givens.count { it == 0 } == 0) errors += "${puzzle.id} must leave cells for the player"
+        if (puzzle.givens.size == SUDOKU_CELL_COUNT && sudokuSolutionCount(puzzle.givens) != 1) {
+            errors += "${puzzle.id} must have exactly one solution"
+        }
+        if (puzzle.givens.size == SUDOKU_CELL_COUNT && !sudokuSolvesWithDirectSingles(puzzle)) {
+            errors += "${puzzle.id} must be solvable with starter-level singles"
+        }
     }
 
     private fun validateConnections(
@@ -198,11 +207,101 @@ class PuzzlePackValidator(
         if (group.explanation.isBlank()) errors += "$id connection group explanation is required"
     }
 
-    private fun hasValidCompletedSudokuRows(solution: List<Int>): Boolean {
+    private fun hasValidCompletedSudoku(solution: List<Int>): Boolean {
         if (solution.size != SUDOKU_CELL_COUNT) return false
-        val expected = (1..6).toSet()
-        return solution.chunked(6).all { row -> row.toSet() == expected }
+        return sudokuUnits().all { unit -> unit.map { solution[it] }.toSet() == SUDOKU_DIGITS }
     }
+
+    private fun sudokuGivensMatchSolution(puzzle: SudokuPuzzle): Boolean =
+        puzzle.givens.size == SUDOKU_CELL_COUNT &&
+            puzzle.solution.size == SUDOKU_CELL_COUNT &&
+            puzzle.givens.withIndex().all { (index, value) -> value == 0 || value == puzzle.solution[index] }
+
+    private fun sudokuSolvesWithDirectSingles(puzzle: SudokuPuzzle): Boolean {
+        val board = puzzle.givens.toMutableList()
+        var changed: Boolean
+        do {
+            changed = false
+            board.indices.filter { board[it] == 0 }.forEach { index ->
+                val candidates = sudokuCandidates(board, index)
+                if (candidates.size == 1) {
+                    board[index] = candidates.single()
+                    changed = true
+                }
+            }
+        } while (changed)
+        return board == puzzle.solution
+    }
+
+    private fun sudokuSolutionCount(
+        givens: List<Int>,
+        limit: Int = 2,
+    ): Int {
+        val board = givens.toMutableList()
+        return countSudokuSolutions(board, limit)
+    }
+
+    private fun countSudokuSolutions(
+        board: MutableList<Int>,
+        limit: Int,
+    ): Int {
+        val index =
+            board.indices
+                .filter { board[it] == 0 }
+                .minByOrNull { sudokuCandidates(board, it).size }
+        var count = 0
+        if (index == null) {
+            count = 1
+        } else {
+            val candidates = sudokuCandidates(board, index)
+            for (candidate in candidates) {
+                if (count < limit) {
+                    board[index] = candidate
+                    count += countSudokuSolutions(board, limit - count)
+                    board[index] = 0
+                }
+            }
+        }
+        return count
+    }
+
+    private fun sudokuCandidates(
+        board: List<Int>,
+        index: Int,
+    ): Set<Int> {
+        val used = sudokuPeers(index).map { board[it] }.filter { it > 0 }.toSet()
+        return SUDOKU_DIGITS - used
+    }
+
+    private fun sudokuUnits(): List<List<Int>> = sudokuRows() + sudokuColumns() + sudokuRegions()
+
+    private fun sudokuRows(): List<List<Int>> =
+        (0 until SUDOKU_SIZE).map { row ->
+            (0 until SUDOKU_SIZE).map { column -> row * SUDOKU_SIZE + column }
+        }
+
+    private fun sudokuColumns(): List<List<Int>> =
+        (0 until SUDOKU_SIZE).map { column ->
+            (0 until SUDOKU_SIZE).map { row -> row * SUDOKU_SIZE + column }
+        }
+
+    private fun sudokuRegions(): List<List<Int>> =
+        (0 until SUDOKU_SIZE step SUDOKU_REGION_ROWS).flatMap { rowStart ->
+            (0 until SUDOKU_SIZE step SUDOKU_REGION_COLUMNS).map { columnStart ->
+                (rowStart until rowStart + SUDOKU_REGION_ROWS).flatMap { row ->
+                    (columnStart until columnStart + SUDOKU_REGION_COLUMNS).map { column ->
+                        row * SUDOKU_SIZE + column
+                    }
+                }
+            }
+        }
+
+    private fun sudokuPeers(index: Int): Set<Int> =
+        sudokuUnits()
+            .filter { index in it }
+            .flatten()
+            .filterNot { it == index }
+            .toSet()
 
     private fun validateCrosswordShapeAndAnswers(
         puzzle: CrosswordPuzzle,
@@ -306,9 +405,13 @@ class PuzzlePackValidator(
 
     private companion object {
         const val SEASON_LENGTH = 365
+        const val SUDOKU_SIZE = 6
         const val SUDOKU_CELL_COUNT = 36
+        const val SUDOKU_REGION_ROWS = 2
+        const val SUDOKU_REGION_COLUMNS = 3
         val SPELLING_TARGET_RANGE = 8..24
         val CROSSWORD_ENTRY_RANGE = 6..14
+        val SUDOKU_DIGITS = (1..SUDOKU_SIZE).toSet()
 
         val DEFAULT_PROHIBITED_WORDS =
             setOf(

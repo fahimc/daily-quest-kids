@@ -46,96 +46,7 @@ object FixturePackFactory {
                     wordlyPuzzle(dayIndex),
                     spellingPuzzle(dayIndex),
                     crosswordPuzzle(dayIndex),
-                    SudokuPuzzle(
-                        id = "sudoku-${dayId(dayIndex)}",
-                        difficulty = Difficulty.STARTER,
-                        curriculumTags = listOf("maths:logic", "year:3"),
-                        hints =
-                            listOf(
-                                Hint(1, "Look for a row with only one gap."),
-                                Hint(2, "The missing number cannot already be in that row."),
-                                Hint(3, "The top-left region needs a 3."),
-                            ),
-                        review = automatedOnlyReview(),
-                        givens =
-                            listOf(
-                                0,
-                                2,
-                                3,
-                                4,
-                                5,
-                                6,
-                                4,
-                                5,
-                                6,
-                                1,
-                                2,
-                                3,
-                                2,
-                                3,
-                                4,
-                                5,
-                                6,
-                                1,
-                                5,
-                                6,
-                                1,
-                                2,
-                                3,
-                                4,
-                                3,
-                                4,
-                                5,
-                                6,
-                                1,
-                                2,
-                                6,
-                                1,
-                                2,
-                                3,
-                                4,
-                                5,
-                            ),
-                        solution =
-                            listOf(
-                                1,
-                                2,
-                                3,
-                                4,
-                                5,
-                                6,
-                                4,
-                                5,
-                                6,
-                                1,
-                                2,
-                                3,
-                                2,
-                                3,
-                                4,
-                                5,
-                                6,
-                                1,
-                                5,
-                                6,
-                                1,
-                                2,
-                                3,
-                                4,
-                                3,
-                                4,
-                                5,
-                                6,
-                                1,
-                                2,
-                                6,
-                                1,
-                                2,
-                                3,
-                                4,
-                                5,
-                            ),
-                    ),
+                    sudokuPuzzle(dayIndex),
                     ConnectionsPuzzle(
                         id = "connections-${dayId(dayIndex)}",
                         difficulty = Difficulty.STARTER,
@@ -204,6 +115,19 @@ object FixturePackFactory {
         )
     }
 
+    private fun sudokuPuzzle(dayIndex: Int): SudokuPuzzle {
+        val solution = sudokuSolution(dayIndex)
+        return SudokuPuzzle(
+            id = "sudoku-${dayId(dayIndex)}",
+            difficulty = Difficulty.STARTER,
+            curriculumTags = listOf("maths:logic", "maths:number", "year:3"),
+            hints = sudokuHints(),
+            review = humanReview(),
+            givens = sudokuGivens(solution, dayIndex),
+            solution = solution,
+        )
+    }
+
     private fun automatedOnlyReview(): ReviewMetadata =
         ReviewMetadata(
             automatedReviewPassed = true,
@@ -237,6 +161,14 @@ object FixturePackFactory {
             Hint(2, "Reveal one letter in the selected answer."),
             Hint(3, "Check the selected answer."),
             Hint(4, "Reveal the selected answer."),
+        )
+
+    private fun sudokuHints(): List<Hint> =
+        listOf(
+            Hint(1, "Highlight a useful row, column and box."),
+            Hint(2, "Explain which numbers cannot fit there."),
+            Hint(3, "Highlight a cell with only one choice."),
+            Hint(4, "Place one helpful number."),
         )
 
     private val wordlyFixtures =
@@ -695,6 +627,56 @@ object FixturePackFactory {
         val answer: String,
         val clue: String,
     )
+
+    private fun sudokuSolution(dayIndex: Int): List<Int> {
+        val rowOrder = sudokuRowOrder(dayIndex)
+        val columnOrder = sudokuColumnOrder(dayIndex)
+        val digitOffset = dayIndex % SUDOKU_SIZE
+        return rowOrder.flatMap { row ->
+            columnOrder.map { column ->
+                val base = ((row % SUDOKU_REGION_ROWS) * SUDOKU_REGION_COLUMNS + row / SUDOKU_REGION_ROWS + column) % SUDOKU_SIZE + 1
+                (base + digitOffset - 1) % SUDOKU_SIZE + 1
+            }
+        }
+    }
+
+    private fun sudokuGivens(
+        solution: List<Int>,
+        dayIndex: Int,
+    ): List<Int> =
+        solution.mapIndexed { index, value ->
+            val row = index / SUDOKU_SIZE
+            val column = index % SUDOKU_SIZE
+            if (column == (row + dayIndex) % SUDOKU_SIZE) 0 else value
+        }
+
+    private fun sudokuRowOrder(dayIndex: Int): List<Int> {
+        val bandOrders =
+            listOf(
+                listOf(0, 1, 2),
+                listOf(1, 2, 0),
+                listOf(2, 0, 1),
+                listOf(0, 2, 1),
+                listOf(2, 1, 0),
+            )
+        return bandOrders[dayIndex % bandOrders.size].flatMap { band ->
+            val rows = listOf(band * SUDOKU_REGION_ROWS, band * SUDOKU_REGION_ROWS + 1)
+            if ((dayIndex + band) % 2 == 0) rows else rows.reversed()
+        }
+    }
+
+    private fun sudokuColumnOrder(dayIndex: Int): List<Int> {
+        val stackOrder = if ((dayIndex / 5) % 2 == 0) listOf(0, 1) else listOf(1, 0)
+        return stackOrder.flatMap { stack ->
+            val columns = (stack * SUDOKU_REGION_COLUMNS until (stack + 1) * SUDOKU_REGION_COLUMNS).toList()
+            val shift = (dayIndex + stack) % SUDOKU_REGION_COLUMNS
+            columns.drop(shift) + columns.take(shift)
+        }
+    }
+
+    private const val SUDOKU_SIZE = 6
+    private const val SUDOKU_REGION_ROWS = 2
+    private const val SUDOKU_REGION_COLUMNS = 3
 
     private val spellingFixtures =
         listOf(

@@ -13,8 +13,8 @@ android {
         applicationId = "com.dailyquestkids.app"
         minSdk = 26
         targetSdk = 37
-        versionCode = 13
-        versionName = "0.4.0"
+        versionCode = 14
+        versionName = "0.5.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

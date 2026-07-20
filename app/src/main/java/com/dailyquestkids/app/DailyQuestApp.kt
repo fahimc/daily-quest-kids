@@ -67,6 +67,7 @@ import com.dailyquestkids.core.model.Puzzle
 import com.dailyquestkids.core.model.PuzzleCategory
 import com.dailyquestkids.core.model.PuzzleStatus
 import com.dailyquestkids.core.model.SpellingBeePuzzle
+import com.dailyquestkids.core.model.SudokuPuzzle
 import com.dailyquestkids.core.model.WordlyPuzzle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
@@ -255,6 +256,29 @@ private fun MainQuestScaffold(
                                 CrosswordRouteDependencies(
                                     progressStore = container.progressStore,
                                     crosswordProgressStore = container.crosswordProgressStore,
+                                    dayIndex = homeState.globalDayNumber - 1,
+                                    todaysPuzzleIds = coordinator.currentPuzzleIds(),
+                                ),
+                            onBack = { navController.popBackStack() },
+                            onReturnHome = {
+                                navController.navigate(Route.Home.path) {
+                                    popUpTo(Route.Home.path) { inclusive = true }
+                                }
+                            },
+                        )
+                    }
+                    is SudokuPuzzle -> {
+                        SudokuRoute(
+                            data =
+                                SudokuRouteData(
+                                    puzzle = puzzle,
+                                    settings = settings,
+                                    homeState = homeState,
+                                ),
+                            dependencies =
+                                SudokuRouteDependencies(
+                                    progressStore = container.progressStore,
+                                    sudokuProgressStore = container.sudokuProgressStore,
                                     dayIndex = homeState.globalDayNumber - 1,
                                     todaysPuzzleIds = coordinator.currentPuzzleIds(),
                                 ),
@@ -1439,9 +1463,9 @@ private fun HowToPlayScreen(onBack: () -> Unit) {
             subtitle = "Complete the number grid.",
             steps =
                 listOf(
-                    "Each row needs the numbers 1 to 9 once.",
-                    "Each column needs the numbers 1 to 9 once.",
-                    "Each 3 by 3 box also needs 1 to 9 once.",
+                    "Each row needs the numbers 1 to 6 once.",
+                    "Each column needs the numbers 1 to 6 once.",
+                    "Each 2 by 3 box also needs 1 to 6 once.",
                     "Start where the most numbers are already filled in.",
                 ),
         )
@@ -1459,7 +1483,7 @@ private fun HowToPlayScreen(onBack: () -> Unit) {
         QuestPanel {
             Text("Today", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(
-                "Wordly, Spelling B and Crossword are fully playable. " +
+                "Wordly, Spelling B, Crossword and Sudoku are fully playable. " +
                     "The other daily lands show previews while their full engines are being built.",
             )
         }
